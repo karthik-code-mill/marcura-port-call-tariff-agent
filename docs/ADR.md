@@ -68,3 +68,17 @@ SEC     FEE ITEM                                      GT RANGE               CAL
 
 ## Execution result of the @document_preparation_agent
  Pipeline complete — version=FY2025-26-v1.7  415 fee items stored,
+
+
+## Considered
+Heirarchial paged Index
+he problem is that most tariff PDFs are not authored like books:
+
+TOC may be missing entirely
+headings are visually obvious but not semantically tagged
+tables break section detection
+font sizes are inconsistent
+OCR PDFs have no structure
+nested numbering is often the only hierarchy signal
+
+Option : LlamaParse (Best Quality)

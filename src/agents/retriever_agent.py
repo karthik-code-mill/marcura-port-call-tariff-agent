@@ -98,6 +98,16 @@ def run(
         return RetrieverOutput(vessel=vessel, applicable_fees=[], not_applicable=[], human_review_items=[])
 
     log.info(f"[RetrieverAgent] {len(candidates)} candidates retrieved")
+    for i, c in enumerate(candidates, 1):
+        log.info(
+            f"[RetrieverAgent] candidate {i:02d}  "
+            f"section={c.get('section')}  "
+            f"port={c.get('port')}  "
+            f"gt_range={c.get('vessel_gt_range')}  "
+            f"fee_item={c.get('tariff_fee_item')}  "
+            f"base_fee={c.get('base_fee')}  "
+            f"confidence={c.get('extraction_confidence')}"
+        )
 
     ctx = _fetch_chunk_context(chunk_store, candidates) if chunk_store else ""
     if not ctx:
@@ -125,10 +135,6 @@ def _query_candidate_fees(tariff_store, vessel: VesselInput) -> List[dict]:
 
     'Other' rows are only fetched when the vessel's port has no dedicated tariff
     section in the DB — avoids inflating candidates for well-covered ports like Durban.
-
-    §7.x cargo-dues rows cover every commodity type and dominate the candidate count.
-    When the vessel carries a known cargo type, only rows whose tariff_fee_item
-    mentions that commodity are included; all other §7.x rows are dropped.
     """
     gt = vessel.gross_tonnage
 
@@ -144,27 +150,31 @@ def _query_candidate_fees(tariff_store, vessel: VesselInput) -> List[dict]:
 
     port_rows = _fetch(vessel.port)
     national_rows = _fetch(_ALL_PORTS_LABEL)
-    # Only include 'Other' rows when the vessel's port has no dedicated tariff entries.
-    other_rows = [] if port_rows else _fetch(_OTHER_PORTS_LABEL)
+    other_rows = _fetch(_OTHER_PORTS_LABEL)
 
-    cargo_keyword = vessel.cargo_type.strip().upper() if vessel.cargo_type else ""
+    # Fee items already covered by a port-specific row — 'Other' rows for the
+    # same (section, tariff_fee_item) must be excluded to avoid double-counting.
+    # 'Other' rows for different fee items (e.g. VTS Charges) are still included.
+    port_covered = {(r["section"], r["tariff_fee_item"]) for r in port_rows}
 
-    seen: set = set()
-    combined: List[dict] = []
+    best: Dict[Tuple[str, str, str], dict] = {}
     for row in port_rows + national_rows + other_rows:
-        # §7.x rows are commodity-specific cargo dues — one row per cargo type.
-        # Skip rows that don't match the vessel's cargo to avoid flooding the LLM.
-        section = (row["section"] or "").strip()
-        if section.startswith("7.") and cargo_keyword:
-            item_upper = (row["tariff_fee_item"] or "").upper()
-            if cargo_keyword not in item_upper:
-                continue
-
+        if row["port"] == _OTHER_PORTS_LABEL and (row["section"], row["tariff_fee_item"]) in port_covered:
+            continue
         key = (row["section"], row["tariff_fee_item"], row["vessel_gt_range"])
-        if key not in seen:
-            seen.add(key)
-            combined.append(dict(row))
-    return combined
+        d = dict(row)
+        existing = best.get(key)
+        if existing is None:
+            best[key] = d
+            continue
+        # Prefer the row with fewer unmodeled clauses, then higher confidence.
+        existing_unmodeled = len(_parse_json_field(existing.get("unmodeled_clauses"), []))
+        new_unmodeled = len(_parse_json_field(d.get("unmodeled_clauses"), []))
+        existing_conf = existing.get("extraction_confidence") or 0.0
+        new_conf = d.get("extraction_confidence") or 0.0
+        if (new_unmodeled, -new_conf) < (existing_unmodeled, -existing_conf):
+            best[key] = d
+    return list(best.values())
 
 
 def _fetch_chunk_context(chunk_store, fees: List[dict]) -> str:

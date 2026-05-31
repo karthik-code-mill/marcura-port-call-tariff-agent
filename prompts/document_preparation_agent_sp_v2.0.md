@@ -56,7 +56,7 @@ A single fee line item often has multiple conditions that determine which rate a
 
 8. **Notes** — Catch-all for any qualifying clause, payment term, definition, reference, or caveat that does not fit `conditions`, `surcharges`, or `exceptions`. Use descriptive keys. When in doubt, use notes — never discard content.
 
-9. **Unmodeled clauses** — Reserve for text that is completely unprocessable without human authority or external context: port-master discretion, procedural instructions to human officials, or external-regulation references. Unclear fee conditions go in `notes`, not here. Anything here triggers mandatory human review.
+9. **Unmodeled clauses** — Reserve for text that define charges & is completely unprocessable without human authority or external context: port-master discretion, human officials, or external-regulation references. Dont include incident or occurence based instruction here. Unclear fee conditions go in `notes`, not here. Anything here triggers mandatory human review.
 
 10. **Confidence** — `1.0` = explicit · `0.8` = one ambiguous field · `0.6` = context-inferred · `0.4` = fee/conditions unclear · `0.0–0.2` = unreliable → human review. Notes content does NOT lower confidence.
 
@@ -72,8 +72,15 @@ A single fee line item often has multiple conditions that determine which rate a
     "All ports excluding Durban and Saldanha"
     → port = "Other"
     Preserve the full sentence in conditions[].
-    If a table contains separate values for different ports:
+    If a fee/rule applies to more than one specific dports:
     → create one record per port.
+    Example:
+    Port Elizabeth / Ngqura
+    → emit:
+    port="Elizabeth"
+    port="Ngqura"
+    If a table contains separate values for different ports:
+    → create one record per port - CRITICAL.
     Example:
     Richards Bay | Durban | Cape Town | Other
     → emit:

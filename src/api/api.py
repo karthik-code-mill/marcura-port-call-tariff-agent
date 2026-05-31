@@ -165,6 +165,14 @@ class PrepareRequest(BaseModel):
             "Useful for re-running extraction after a quota error without re-parsing the PDF."
         ),
     )
+    delete_after_parse: bool = Field(
+        default=False,
+        description=(
+            "Delete the source PDF from the raw directory once Markdown has been "
+            "successfully written to disk. Deletion failure is non-fatal — the pipeline "
+            "continues and a warning is logged. Has no effect when skip_parse=true."
+        ),
+    )
 
     model_config = {"json_schema_extra": {"example": {
         "filename":    "Publisher-Tariff-Book-FY-2025-26.pdf",
@@ -524,6 +532,7 @@ async def trigger_prepare(body: PrepareRequest, background_tasks: BackgroundTask
                 two_column_layout=body.two_column_layout,
                 skip_parse=body.skip_parse,
                 md_path=existing_md,
+                delete_after_parse=body.delete_after_parse,
             )
             ext  = final.get("extraction_summary")
             val  = final.get("validation_summary")

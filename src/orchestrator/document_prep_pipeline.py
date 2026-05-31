@@ -70,6 +70,7 @@ def _node_parse(state: DocumentPrepState) -> dict:
             two_column_layout=state.get("two_column_layout", False),
             country=state["country"],
             version_tag=state["version_tag"],
+            delete_after_parse=state.get("delete_after_parse", False),
         )
         doc_id = _doc_id(pdf_path, state.get("page_start", 1), state.get("page_end"))
         log.info(f"[DocPrepPipeline] parse  done → {md_path.name}")
@@ -189,19 +190,21 @@ def run_document_prep_pipeline(
     two_column_layout: bool = False,
     skip_parse: bool = False,
     md_path: Optional[Path] = None,
+    delete_after_parse: bool = False,
 ) -> DocumentPrepState:
     """Build, run, and return the final state. Used by API and CLI."""
     pipeline = build_document_prep_pipeline()
     initial: dict = {
-        "pdf_path":          pdf_path,
-        "country":           country,
-        "version_tag":       version_tag,
-        "page_start":        page_start,
-        "page_end":          page_end,
-        "two_column_layout": two_column_layout,
-        "skip_parse":        skip_parse,
-        "md_path":           md_path,         # pre-set when skip_parse=True
-        "doc_id":            None,
+        "pdf_path":           pdf_path,
+        "country":            country,
+        "version_tag":        version_tag,
+        "page_start":         page_start,
+        "page_end":           page_end,
+        "two_column_layout":  two_column_layout,
+        "skip_parse":         skip_parse,
+        "delete_after_parse": delete_after_parse,
+        "md_path":            md_path,         # pre-set when skip_parse=True
+        "doc_id":             None,
         "extraction_summary": None,
         "validation_summary": None,
         "errors":             [],
@@ -243,10 +246,12 @@ if __name__ == "__main__":
     parser.add_argument("--page-start",        type=int, default=1)
     parser.add_argument("--page-end",          type=int, default=None)
     parser.add_argument("--two-column-layout", action="store_true", default=False)
-    parser.add_argument("--skip-parse",        action="store_true", default=False,
+    parser.add_argument("--skip-parse",          action="store_true", default=False,
                         help="Skip Pass 1 (PDF→MD). Requires --md-path.")
-    parser.add_argument("--md-path",           type=Path, default=None,
+    parser.add_argument("--md-path",             type=Path, default=None,
                         help="Existing Markdown file. Required when --skip-parse is set.")
+    parser.add_argument("--delete-after-parse",  action="store_true", default=False,
+                        help="Delete the source PDF after Markdown is successfully written.")
     args = parser.parse_args()
 
     if args.skip_parse:
@@ -275,6 +280,7 @@ if __name__ == "__main__":
         two_column_layout=args.two_column_layout,
         skip_parse=args.skip_parse,
         md_path=args.md_path,
+        delete_after_parse=args.delete_after_parse,
     )
 
     ext = final_state.get("extraction_summary")

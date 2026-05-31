@@ -1,0 +1,132 @@
+Issue 1 : unmodeled_clauses incorrect ["Tugs/vessels involved in salvage: Special conditions apply when services rendered constitute salvage. The Authority reserves the right to claim reward for salvage if the service rendered to a vessel in distress constitutes salvage."]
+Issue 2 : Light Dues instead of taking row 3 its taking a row with un modlled clause & confidence low why ?
+Issue 3 : PORT DUES - DAILY INCREMENTAL FEE - as no data on no of days_in_port
+Issue 4 : 
+
+
+
+
+
+
+
+
+
+
+
+05:52:47  INFO      TariffStore ready: E:\app\code\ai\agentic-ai\marcura-port-call-tariff-agent\context-layer\structured\tariff_store_v2_FY2025-26-v3.2.db
+05:52:47  INFO      [pipeline] retrieve  port=Durban  GT=51300.0
+05:52:47  INFO      [RetrieverAgent] port=Durban  GT=51300.0  voyage=inbound
+05:52:47  INFO      [RetrieverAgent] 48 candidates retrieved
+05:52:47  INFO      [RetrieverAgent] No chunk context — proceeding with structured data only
+05:52:47  INFO      AFC is enabled with max remote calls: 10.
+05:54:00  INFO      HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent "HTTP/1.1 200 OK"
+05:54:00  INFO      [RetrieverAgent] 5 applicable  43 skipped  3 flagged for review
+05:54:00  INFO      [pipeline] retrieve done — 5 applicable  43 skipped  3 flagged
+05:54:00  INFO      [pipeline] calculate  5 fees
+05:54:00  INFO      [CalculatorAgent] 5 fees  port=Durban  GT=51300.0
+05:54:00  WARNING     Formula eval failed [1.1 LIGHT DUES ON VESSELS]: 'NoneType' object is not subscriptable
+05:54:00  INFO        1.1  LIGHT DUES ON VESSELS                     base=        0.00  surcharge=      0.00  total=        0.00  [FORMULA ERROR]
+05:54:00  INFO        1.1.1  LIGHT DUES                                base=        0.00  surcharge=      0.00  total=        0.00
+05:54:00  WARNING     Formula eval failed [1.2 SAMSA LEVY]: 'NoneType' object is not subscriptable
+05:54:00  INFO        1.2  SAMSA LEVY                                base=        0.00  surcharge=      0.00  total=        0.00  [FORMULA ERROR]
+05:54:00  INFO        4.1.1  PORT DUES - BASIC FEE                     base=  104,949.54  surcharge=      0.00  total=  104,949.54
+05:54:00  WARNING     Formula eval failed [4.1.1 PORT DUES - DAILY INCREMENTAL FEE]: 'NoneType' object is not subscriptable
+05:54:00  INFO        4.1.1  PORT DUES - DAILY INCREMENTAL FEE         base=        0.00  surcharge=      0.00  total=        0.00  [FORMULA ERROR]
+05:54:00  INFO      AFC is enabled with max remote calls: 10.
+05:54:12  INFO      HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent "HTTP/1.1 200 OK"
+05:54:12  INFO      [CalculatorAgent] Invoice: 5 items  subtotal=104,949.54
+05:54:12  INFO      [pipeline] calculate done — 5 items  subtotal=104,949.54
+05:54:12  INFO      Step log: retrieve: 5 applicable, 43 skipped → calculate: 5 items  subtotal=104,949.54
+{
+  "port": "Durban",
+  "vessel_type": "Bulk Carrier",
+  "gross_tonnage": 51300.0,
+  "voyage_type": "inbound",
+  "currency": "ZAR",
+  "line_items": [
+    {
+      "section": "1.1",
+      "tariff_item": "LIGHT DUES ON VESSELS",
+      "port": "All",
+      "gt_range": "0-999999999",
+      "base_amount": 0.0,
+      "surcharge_amount": 0.0,
+      "total": 0.0,
+      "formula_used": "EXTERNAL_DETERMINATION_REFERENCED_SKIP",
+      "active_surcharges": [],
+      "notes": "The tonnage of a vessel for port tariff purposes is the gross tonnage of a vessel as per the tonnage certificate issued in terms of the Tonnage Convention 1969. (NOT converted to cubic metres).; Where the vessel\u2019s tonnage certificate is not available, the highest tonnage reflected in Lloyds Register of Shipping, is acceptable.; The sea within a distance of twelve (12) nautical miles from the baselines shall be the territorial waters of the Republic. When vessels go beyond twelve (12) nautical miles it would be deemed as being outside the ports territorial waters.; Computation error: 'NoneType' object is not subscriptable. The fee is 0.0, which is anomalous for 'LIGHT DUES ON VESSELS' and suggests the external determination failed.",
+      "source_page": 0,
+      "needs_human_review": true,
+      "review_reason": "'NoneType' object is not subscriptable | extraction_confidence < 0.6 | Computation error: 'NoneType' object is not subscriptable. The fee is 0.0, which is anomalous for 'LIGHT DUES ON VESSELS' and suggests the external determination failed."
+    },
+    {
+      "section": "1.1.1",
+      "tariff_item": "LIGHT DUES",
+      "port": "All",
+      "gt_range": "0-999999999",
+      "base_amount": 0.0,
+      "surcharge_amount": 0.0,
+      "total": 0.0,
+      "formula_used": "base_fee=0.0",
+      "active_surcharges": [],
+      "notes": "Tariffs subject to VAT at 15%; Unmodeled clause: The tariff states the rate is based on Length Overall (LOA), which is not available in the current GT-based rate structure. The computed amount is 0.0 as a result, which is anomalous for 'LIGHT DUES'.",
+      "source_page": 9,
+      "needs_human_review": true,
+      "review_reason": "unmodeled_clauses is non-empty and extraction_confidence < 0.6 | Unmodeled clause: The tariff states the rate is based on Length Overall (LOA), which is not available in the current GT-based rate structure. The computed amount is 0.0 as a result, which is anomalous for 'LIGHT DUES'."
+    },
+    {
+      "section": "1.2",
+      "tariff_item": "SAMSA LEVY",
+      "port": "All",
+      "gt_range": "0-999999999",
+      "base_amount": 0.0,
+      "surcharge_amount": 0.0,
+      "total": 0.0,
+      "formula_used": "EXTERNAL_DETERMINATION_REFERENCED_SKIP",
+      "active_surcharges": [],
+      "notes": "Tariffs subject to VAT at 15%; Tariffs in South African Rand; Computation error: 'NoneType' object is not subscriptable. The fee is 0.0, which is anomalous for 'SAMSA LEVY' and suggests the external determination failed. Also, an unmodeled clause indicates external regulations are referenced.",
+      "source_page": 10,
+      "needs_human_review": true,
+      "review_reason": "'NoneType' object is not subscriptable | unmodeled_clauses is non-empty and extraction_confidence < 0.6 | Computation error: 'NoneType' object is not subscriptable. The fee is 0.0, which is anomalous for 'SAMSA LEVY' and suggests the external determination failed. Also, an unmodeled clause indicates external regulations are referenced."
+    },
+    {
+      "section": "4.1.1",
+      "tariff_item": "PORT DUES - BASIC FEE",
+      "port": "All",
+      "gt_range": "0-999999999",
+      "base_amount": 104949.54,
+      "surcharge_amount": 0.0,
+      "total": 104949.54,
+      "formula_used": "204.58 * math.ceil(GT / 100)",
+      "active_surcharges": [],
+      "notes": "per 100 tons or part thereof; Computed amount is consistent with the formula: 204.58 * ceil(51300 / 100) = 104949.54. No applicable exceptions or unmodeled clauses.",
+      "source_page": 21,
+      "needs_human_review": false,
+      "review_reason": ""
+    },
+    {
+      "section": "4.1.1",
+      "tariff_item": "PORT DUES - DAILY INCREMENTAL FEE",
+      "port": "All",
+      "gt_range": "0-999999999",
+      "base_amount": 0.0,
+      "surcharge_amount": 0.0,
+      "total": 0.0,
+      "formula_used": "61.34 * math.ceil(GT / 100) * (days_in_port)",
+      "active_surcharges": [],
+      "notes": "per 100 tons or part thereof per 24 hour period, a part of a 24 hour period being applied pro rata; Computation error: 'NoneType' object is not subscriptable, likely due to missing 'days_in_port' input. The fee is 0.0, which is anomalous for a daily incremental fee if the vessel is in port.",
+      "source_page": 21,
+      "needs_human_review": true,
+      "review_reason": "'NoneType' object is not subscriptable | Computation error: 'NoneType' object is not subscriptable, likely due to missing 'days_in_port' input. The fee is 0.0, which is anomalous for a daily incremental fee if the vessel is in port."
+    }
+  ],
+  "subtotal": 104949.54,
+  "computation_notes": "Several fees (Light Dues, SAMSA Levy, Port Dues - Daily Incremental Fee) resulted in 0.0 amounts due to computation errors or unmodeled clauses (e.g., LOA-based calculation for Light Dues). These items are flagged for human review. The Port Dues - Basic Fee was successfully calculated and validated.",
+  "human_review_items": [
+    "LIGHT DUES ON VESSELS",
+    "LIGHT DUES",
+    "SAMSA LEVY",
+    "PORT DUES - DAILY INCREMENTAL FEE"
+  ],
+  "retriever_skipped_fees": 43
+}

@@ -1,25 +1,10 @@
 """
 Tariff Pipeline Orchestrator — Stage 2 §2.3
 ============================================
-LangGraph state graph.
-
-Design: each node calls an autonomous agent through its public run() interface.
-The orchestrator owns state management and flow control — nothing else.
+LangGraph state graph: retrieve → calculate → END.
 
 Graph topology:
-  START
-    ↓
-  [retrieve]   — RetrieverAgent.run(): SQL retrieval + LLM applicability evaluation
-    ↓              (chunk context used if available, skipped gracefully if not)
-  [calculate]  — CalculatorAgent.run(): deterministic formula eval + LLM audit
-    ↓
-  END
-
-Why this is clean:
-  ✔ Orchestrator has zero knowledge of agent internals
-  ✔ Agents can be swapped or refactored without touching this file
-  ✔ State only carries agent outputs — no intermediate implementation details
-  ✔ Flow control and error accumulation live here; computation lives in agents
+  START → [retrieve] → [calculate] → END
 """
 
 import logging
@@ -42,48 +27,23 @@ log = logging.getLogger(__name__)
 
 
 def build_pipeline(tariff_store, chunk_store=None):
-    """
-    Build and compile the tariff calculation LangGraph pipeline.
-
-    tariff_store — TariffStore: structured fee DB (required)
-    chunk_store  — ChunkStore or None: hierarchical chunk index (optional).
-                   Pass None when the chunk index has not been built yet;
-                   the retriever agent will skip chunk context and continue.
-    """
-
-    # ── Node 1: Retriever Agent ───────────────────────────────────────────────
+    """Build and compile the tariff calculation LangGraph pipeline."""
 
     def node_retrieve(state: TariffPipelineState) -> dict:
         vessel = state["vessel"]
         log.info(f"[pipeline] retrieve  port={vessel.port}  GT={vessel.gross_tonnage}")
         try:
             result = retriever_agent.run(vessel, tariff_store, chunk_store)
-            log.info(
-                f"[pipeline] retrieve done — "
-                f"{len(result.applicable_fees)} applicable  "
-                f"{len(result.not_applicable)} skipped  "
-                f"{len(result.human_review_items)} flagged"
-            )
+            log.info(f"[pipeline] retrieve done — {len(result.applicable_fees)} applicable  {len(result.not_applicable)} skipped  {len(result.human_review_items)} flagged")
             return {
                 "applicable_fees":    result.applicable_fees,
                 "not_applicable":     result.not_applicable,
                 "human_review_items": result.human_review_items,
-                "step_log": [
-                    f"retrieve: {len(result.applicable_fees)} applicable, "
-                    f"{len(result.not_applicable)} skipped"
-                ],
+                "step_log": [f"retrieve: {len(result.applicable_fees)} applicable, {len(result.not_applicable)} skipped"],
             }
         except Exception as exc:
             log.error(f"[pipeline] retrieve FAILED: {exc}")
-            return {
-                "applicable_fees":    [],
-                "not_applicable":     [],
-                "human_review_items": [],
-                "errors":   [f"retrieve: {exc}"],
-                "step_log": ["retrieve: FAILED — empty invoice will be returned"],
-            }
-
-    # ── Node 2: Calculator Agent ──────────────────────────────────────────────
+            return {"applicable_fees": [], "not_applicable": [], "human_review_items": [], "errors": [f"retrieve: {exc}"], "step_log": ["retrieve: FAILED"]}
 
     def node_calculate(state: TariffPipelineState) -> dict:
         vessel = state["vessel"]
@@ -95,50 +55,27 @@ def build_pipeline(tariff_store, chunk_store=None):
                 not_applicable=state["not_applicable"],
                 human_review_items=state["human_review_items"],
             )
-            log.info(
-                f"[pipeline] calculate done — "
-                f"{len(invoice.line_items)} items  subtotal={invoice.subtotal:,.2f}"
-            )
-            return {
-                "invoice":  invoice,
-                "step_log": [
-                    f"calculate: {len(invoice.line_items)} items  subtotal={invoice.subtotal:,.2f}"
-                ],
-            }
+            log.info(f"[pipeline] calculate done — {len(invoice.line_items)} items  subtotal={invoice.subtotal:,.2f}")
+            return {"invoice": invoice, "step_log": [f"calculate: {len(invoice.line_items)} items  subtotal={invoice.subtotal:,.2f}"]}
         except Exception as exc:
             log.error(f"[pipeline] calculate FAILED: {exc}")
-            return {
-                "invoice":  None,
-                "errors":   [f"calculate: {exc}"],
-                "step_log": ["calculate: FAILED"],
-            }
-
-    # ── Wire the graph ────────────────────────────────────────────────────────
+            return {"invoice": None, "errors": [f"calculate: {exc}"], "step_log": ["calculate: FAILED"]}
 
     builder = StateGraph(TariffPipelineState)
     builder.add_node("retrieve",  node_retrieve)
     builder.add_node("calculate", node_calculate)
-
     builder.add_edge(START,       "retrieve")
     builder.add_edge("retrieve",  "calculate")
     builder.add_edge("calculate", END)
-
     return builder.compile()
 
 
-# ─── Convenience wrapper ──────────────────────────────────────────────────────
-
-def run_pipeline(
-    vessel: VesselInput,
-    tariff_store,
-    chunk_store=None,
-    config: Optional[TariffPipelineConfig] = None,
-) -> TariffInvoice:
-    """Build, run, and return the invoice in one call. Used by the API."""
+def run_pipeline(vessel: VesselInput, tariff_store, chunk_store=None, config: Optional[TariffPipelineConfig] = None) -> TariffInvoice:
+    """Build, run, and return the invoice in one call."""
     pipeline = build_pipeline(tariff_store, chunk_store)
     initial: dict = {
         "vessel":             vessel,
-        "config":             config or load_pipeline_config(),
+        "config":             config or load_pipeline_config(vessel.country),
         "applicable_fees":    [],
         "not_applicable":     [],
         "human_review_items": [],
@@ -146,11 +83,17 @@ def run_pipeline(
         "errors":             [],
         "step_log":           [],
     }
-    final_state = pipeline.invoke(initial)
+    # TODO(future-enhancement): Pass a LangGraph checkpointer (SqliteSaver) here
+    #   to enable mid-pipeline resume on transient failure — valuable when the LLM
+    #   quota is hit partway through a multi-section retrieval run.
+    try:
+        final_state = pipeline.invoke(initial)
+    except Exception as exc:
+        log.error(f"[Pipeline] LangGraph graph execution failed: {exc}", exc_info=True)
+        raise RuntimeError(f"Pipeline graph execution failed: {exc}") from exc
 
     if final_state.get("errors"):
         log.warning(f"Pipeline completed with errors: {final_state['errors']}")
-
     log.info(f"Step log: {' → '.join(final_state.get('step_log', []))}")
 
     invoice = final_state.get("invoice")
@@ -159,7 +102,7 @@ def run_pipeline(
     return invoice
 
 
-# ─── Entry Point (standalone test) ───────────────────────────────────────────
+# ─── Entry Point (standalone) ────────────────────────────────────────────────
 
 if __name__ == "__main__":
     import argparse
@@ -167,18 +110,13 @@ if __name__ == "__main__":
     from dotenv import load_dotenv
 
     load_dotenv()
+    logging.basicConfig(level=logging.INFO, format="%(asctime)s  %(levelname)-8s  %(message)s", datefmt="%H:%M:%S")
 
-    logging.basicConfig(
-        level=logging.INFO,
-        format="%(asctime)s  %(levelname)-8s  %(message)s",
-        datefmt="%H:%M:%S",
-    )
-
-    from document_preparation_agent import DB_PATH, TariffStore
-    from hierarchical_chunk_agent import CHUNK_DB_PATH, ChunkStore
-    from models.config import TariffPipelineConfig
+    from agents.document_preparation_agent import TariffStore, db_path_for_version, load_active_version
+    from agents.hierarchical_chunk_agent import CHUNK_DB_PATH, ChunkStore
 
     parser = argparse.ArgumentParser(description="Tariff Pipeline — §2.3")
+    parser.add_argument("--country",        default="South Africa", help="Country, e.g. 'South Africa'")
     parser.add_argument("--port",           required=True)
     parser.add_argument("--gt",             type=float, required=True)
     parser.add_argument("--vessel-type",    default="")
@@ -191,7 +129,12 @@ if __name__ == "__main__":
     parser.add_argument("--version-tag",    default=None)
     args = parser.parse_args()
 
+    version_tag = args.version_tag or load_active_version(args.country)
+    if not version_tag:
+        raise SystemExit(f"No active version for country '{args.country}'. Pass --version-tag.")
+
     vessel_input = VesselInput(
+        country=args.country,
         port=args.port,
         gross_tonnage=args.gt,
         vessel_type=args.vessel_type,
@@ -203,7 +146,7 @@ if __name__ == "__main__":
         special_conditions=args.conditions,
     )
 
-    cfg     = TariffPipelineConfig(tariff_version=args.version_tag)
+    cfg     = TariffPipelineConfig(country=args.country, tariff_version=version_tag)
     t_store = TariffStore(cfg.resolved_db_path)
     c_store = ChunkStore(CHUNK_DB_PATH) if CHUNK_DB_PATH.exists() else None
     try:

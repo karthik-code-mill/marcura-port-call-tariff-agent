@@ -2,6 +2,41 @@
 
 ## 1 Framework
 For the Execution stage the agent framework choosen is Lang graph,
+Other consideration of a simple python based steps executor will save langgraph overheads. But i wanted to add on HITL for future roadmap.
+It might look overkill for the flows specially data prep but as the  project evolves from assignment to full context this could be more appropirate(open for modifications). But defintely good to have a reassessment.
+
+Other considerations - simple phyton based steps
+# orchestrator/document_prep_pipeline.py — no LangGraph needed
+
+def run_document_prep_pipeline(pdf_path, country, version_tag, ...) -> DocPrepResult:
+    result = DocPrepResult()
+
+    # Step 1: Parse
+    try:
+        result.md_path = parser_agent.run(pdf_path, ...)
+        result.step_log.append("parse: done")
+    except ParserError as e:
+        result.errors.append(f"parse: {e}")
+        return result          # can't continue without MD
+
+    # Step 2: Extract
+    try:
+        result.extraction_summary = rule_extractor_agent.run(result.md_path, ...)
+        result.step_log.append(f"extract: {result.extraction_summary.fee_items_written} fees")
+    except ExtractionError as e:
+        result.errors.append(f"extract: {e}")
+        return result          # can't validate without extracted data
+
+    # Step 3: Validate
+    try:
+        result.validation_summary = validation_agent.run(result.md_path, ...)
+        result.step_log.append(f"validate: {result.validation_summary.on_hold_count} on_hold")
+    except Exception as e:
+        result.errors.append(f"validate: {e}")  # validation failure is non-fatal
+
+    return result
+
+
 Flow is |
 Agent 1: Tariff Retriever
     ↓ (structured fees + conditions + metadata)
@@ -10,7 +45,6 @@ Agent 2: Calculator & Response Generator
 Final output (fees + explanation + audit trail)
 
 need frameworks that support:
-
 explicit orchestration
 structured state
 tool calling
@@ -68,3 +102,17 @@ SEC     FEE ITEM                                      GT RANGE               CAL
 
 ## Execution result of the @document_preparation_agent
  Pipeline complete — version=FY2025-26-v1.7  415 fee items stored,
+
+
+## Considered
+Heirarchial paged Index
+he problem is that most tariff PDFs are not authored like books:
+
+TOC may be missing entirely
+headings are visually obvious but not semantically tagged
+tables break section detection
+font sizes are inconsistent
+OCR PDFs have no structure
+nested numbering is often the only hierarchy signal
+
+Option : LlamaParse (Best Quality)

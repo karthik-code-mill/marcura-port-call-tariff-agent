@@ -64,13 +64,13 @@ load_dotenv()
 
 # ─── Configuration ────────────────────────────────────────────────────────────
 
-BASE_DIR      = Path(__file__).resolve().parent.parent
+BASE_DIR      = Path(__file__).resolve().parent.parent.parent
 RAW_DIR       = BASE_DIR / "context-layer" / "rag" / "raw"
 CHUNK_DIR     = BASE_DIR / "context-layer" / "rag" / "chunks"
 CHUNK_DB_PATH = CHUNK_DIR / "hierarchical_store.db"
 
-# Tariff store path — read-only, used to resolve section → fee_item_name
-TARIFF_DB_PATH = BASE_DIR / "context-layer" / "structured" / "tariff_store.db"
+# Tariff store path — read-only, used to resolve section → fee_item_name (legacy fallback)
+TARIFF_DB_PATH = BASE_DIR / "context-layer" / "rag" / "db" / "south-africa-tariff-store-legacy.db"
 
 BATCH_SIZE = 5
 

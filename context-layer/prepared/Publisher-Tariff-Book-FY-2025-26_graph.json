@@ -1,0 +1,266 @@
+{
+  "md_file": "Publisher-Tariff-Book-FY-2025-26_v2.md",
+  "doc_id": "42dc0ab23bfd",
+  "total_top_level": 28,
+  "processing_units": 21,
+  "rules": {
+    "A": "Section has direct fee content → send full section as one LLM call",
+    "B": "Section has no direct fee content → recurse to children",
+    "C": "No fee content anywhere → skip",
+    "included_in_parent": "Bundled into parent Rule-A call"
+  },
+  "tree": [
+    {
+      "number": "",
+      "title": "**SECTION 1**",
+      "level": 2,
+      "rule": "C",
+      "selected": false,
+      "direct_content_chars": 0,
+      "children": []
+    },
+    {
+      "number": "",
+      "title": "**1.1 LIGHT DUES ON VESSELS**",
+      "level": 2,
+      "rule": "A",
+      "selected": true,
+      "direct_content_chars": 646,
+      "children": []
+    },
+    {
+      "number": "",
+      "title": "**1.1.1 LIGHT DUES**",
+      "level": 2,
+      "rule": "A",
+      "selected": true,
+      "direct_content_chars": 2002,
+      "children": []
+    },
+    {
+      "number": "",
+      "title": "**1.2 SAMSA LEVY**",
+      "level": 2,
+      "rule": "A",
+      "selected": true,
+      "direct_content_chars": 304,
+      "children": []
+    },
+    {
+      "number": "",
+      "title": "**SECTION 2**",
+      "level": 2,
+      "rule": "C",
+      "selected": false,
+      "direct_content_chars": 0,
+      "children": []
+    },
+    {
+      "number": "",
+      "title": "**VESSEL TRAFFIC SERVICES (VTS)**",
+      "level": 2,
+      "rule": "C",
+      "selected": false,
+      "direct_content_chars": 0,
+      "children": []
+    },
+    {
+      "number": "",
+      "title": "**2.1 VTS CHARGES ON VESSELS**",
+      "level": 2,
+      "rule": "A",
+      "selected": true,
+      "direct_content_chars": 479,
+      "children": []
+    },
+    {
+      "number": "",
+      "title": "**2.1.1 VTS CHARGES**",
+      "level": 2,
+      "rule": "A",
+      "selected": true,
+      "direct_content_chars": 825,
+      "children": []
+    },
+    {
+      "number": "",
+      "title": "**SECTION 3**",
+      "level": 2,
+      "rule": "C",
+      "selected": false,
+      "direct_content_chars": 0,
+      "children": []
+    },
+    {
+      "number": "",
+      "title": "**MARINE SERVICES**",
+      "level": 2,
+      "rule": "C",
+      "selected": false,
+      "direct_content_chars": 0,
+      "children": []
+    },
+    {
+      "number": "",
+      "title": "**3.1 GENERAL TERMS AND CONDITIONS**",
+      "level": 2,
+      "rule": "A",
+      "selected": true,
+      "direct_content_chars": 1343,
+      "children": []
+    },
+    {
+      "number": "",
+      "title": "**3.2 MARINE SERVICES INCENTIVE**",
+      "level": 2,
+      "rule": "A",
+      "selected": true,
+      "direct_content_chars": 910,
+      "children": []
+    },
+    {
+      "number": "",
+      "title": "**3.3 PILOTAGE SERVICES**",
+      "level": 2,
+      "rule": "A",
+      "selected": true,
+      "direct_content_chars": 1954,
+      "children": []
+    },
+    {
+      "number": "",
+      "title": "**3.4 SURVEY/EXAMINATION OF SMALL VESSELS AND LIFE SAVING APPLIANCES**",
+      "level": 2,
+      "rule": "A",
+      "selected": true,
+      "direct_content_chars": 174,
+      "children": []
+    },
+    {
+      "number": "",
+      "title": "**3.5 PILOTAGE EXEMPTION CERTIFICATE**",
+      "level": 2,
+      "rule": "A",
+      "selected": true,
+      "direct_content_chars": 1166,
+      "children": []
+    },
+    {
+      "number": "",
+      "title": "**3.6 TUGS/VESSEL ASSISTANCE AND/OR ATTENDANCE**",
+      "level": 2,
+      "rule": "A",
+      "selected": true,
+      "direct_content_chars": 3065,
+      "children": []
+    },
+    {
+      "number": "",
+      "title": "**3.7 MISCELLANEOUS TUG/VESSEL SERVICES**",
+      "level": 2,
+      "rule": "A",
+      "selected": true,
+      "direct_content_chars": 3408,
+      "children": []
+    },
+    {
+      "number": "",
+      "title": "**3.8 BERTHING SERVICES**",
+      "level": 2,
+      "rule": "A",
+      "selected": true,
+      "direct_content_chars": 1784,
+      "children": []
+    },
+    {
+      "number": "",
+      "title": "**3.9 RUNNING OF VESSEL LINES**",
+      "level": 2,
+      "rule": "A",
+      "selected": true,
+      "direct_content_chars": 1704,
+      "children": []
+    },
+    {
+      "number": "",
+      "title": "**3.10 HIRE OF MARINE EQUIPMENT/MARINE SERVICES**",
+      "level": 2,
+      "rule": "A",
+      "selected": true,
+      "direct_content_chars": 1080,
+      "children": []
+    },
+    {
+      "number": "",
+      "title": "**SECTION 4**",
+      "level": 2,
+      "rule": "C",
+      "selected": false,
+      "direct_content_chars": 0,
+      "children": []
+    },
+    {
+      "number": "",
+      "title": "**PORT FEES ON VESSELS, MISCELLANEOUS FEES AND SERVICES**",
+      "level": 2,
+      "rule": "C",
+      "selected": false,
+      "direct_content_chars": 0,
+      "children": []
+    },
+    {
+      "number": "",
+      "title": "**4.1 PORT FEES ON VESSELS**",
+      "level": 2,
+      "rule": "A",
+      "selected": true,
+      "direct_content_chars": 326,
+      "children": []
+    },
+    {
+      "number": "",
+      "title": "**4.1.1 PORT DUES**",
+      "level": 2,
+      "rule": "A",
+      "selected": true,
+      "direct_content_chars": 2729,
+      "children": []
+    },
+    {
+      "number": "",
+      "title": "**4.1.2 BERTH DUES**",
+      "level": 2,
+      "rule": "A",
+      "selected": true,
+      "direct_content_chars": 3358,
+      "children": []
+    },
+    {
+      "number": "",
+      "title": "**4.2 PORT DUES FOR SMALL VESSELS, HULKS AND PLEASURE VESSELS**",
+      "level": 2,
+      "rule": "A",
+      "selected": true,
+      "direct_content_chars": 2603,
+      "children": []
+    },
+    {
+      "number": "",
+      "title": "**4.3 MISCELLANEOUS SERVICES**",
+      "level": 2,
+      "rule": "A",
+      "selected": true,
+      "direct_content_chars": 518,
+      "children": []
+    },
+    {
+      "number": "",
+      "title": "**4.3.1 FIRE AND EMERGENCY SERVICES**",
+      "level": 2,
+      "rule": "A",
+      "selected": true,
+      "direct_content_chars": 1428,
+      "children": []
+    }
+  ]
+}

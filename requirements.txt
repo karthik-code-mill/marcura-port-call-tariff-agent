@@ -1,0 +1,23 @@
+# ── Stage 1: Document Preparation (direct Gemini SDK) ────────────────────────
+google-genai
+pdfplumber
+pymupdf4llm          # Pass-1 PDF→Markdown (requires PyMuPDF ≥ 1.24)
+tqdm
+
+# ── Stage 2: Multi-Agent Execution (LangGraph orchestration) ─────────────────
+langgraph>=0.2
+langchain-core
+langchain                       # init_chat_model
+
+# LLM providers — install the one matching your LLM_MODEL prefix
+langchain-google-genai          # google_genai:*   (default)
+# langchain-openai              # openai:* or azure_openai:*
+# langchain-anthropic           # anthropic:*
+
+# ── Shared ────────────────────────────────────────────────────────────────────
+pydantic>=2.0
+python-dotenv
+
+# ── API layer ─────────────────────────────────────────────────────────────────
+fastapi
+uvicorn[standard]

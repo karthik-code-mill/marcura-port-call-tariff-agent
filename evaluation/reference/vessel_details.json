@@ -1,0 +1,52 @@
+{
+    "vessel_metadata": {
+        "name": "SUDESTADA",
+        "built_year": 2010,
+        "flag": "MLT - Malta",
+        "classification_society": "Registro Italiano Navale",
+        "call_sign": null
+    },
+    "technical_specs": {
+        "imo_number": null,
+        "type": "Bulk Carrier",
+        "dwt": 93274,
+        "gross_tonnage": 51300,
+        "net_tonnage": 31192,
+        "loa_meters": 229.2,
+        "beam_meters": 38.0,
+        "moulded_depth_meters": 20.7,
+        "lbp_meters": 222.0,
+        "draft_sw_s_w_t": [
+            14.9,
+            0.0,
+            0.0
+        ],
+        "suez_gt": null,
+        "suez_nt": 49069
+    },
+    "operational_data": {
+        "cargo_quantity_mt": 40000,
+        "days_alongside": 3.39,
+        "arrival_time": "2024-11-15T10:12:00",
+        "departure_time": "2024-11-22T13:00:00",
+        "activity": "Exporting Iron Ore",
+        "num_operations": 2,
+        "num_holds": 7
+    },
+    "voyage": {
+        "origin_port": {
+            "port_name": "Port of Tubarão",
+            "country": "Brazil",
+            "unlocode": "BRTUB"
+        },
+        "destination_port": {
+            "port_name": "Port of Durban",
+            "country": "South Africa",
+            "unlocode": "ZADUR"
+        },
+        "voyage_status": "Laden",
+        "cargo_type": "Iron Ore",
+        "last_port_of_call": "Singapore",
+        "next_port_of_call": null
+    }
+}

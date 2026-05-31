@@ -1,0 +1,37 @@
+# Environment & secrets
+.env
+.env.*
+!.env.example
+
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+.Python
+*.egg-info/
+dist/
+build/
+.venv/
+venv/
+env/
+
+# Claude Code local settings & temp
+.claude/settings.local.json
+.claude/temp/
+
+# SQLite databases — only latest is tracked
+context-layer/structured/*.db
+!context-layer/structured/tariff_store_v2_FY2025-26-v3.1.db
+context-layer/structured/*.log
+
+# Dev-only private notes
+docs/-dont-read/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# IDE
+.vscode/
+.idea/

@@ -83,7 +83,14 @@ def run_pipeline(vessel: VesselInput, tariff_store, chunk_store=None, config: Op
         "errors":             [],
         "step_log":           [],
     }
-    final_state = pipeline.invoke(initial)
+    # TODO(future-enhancement): Pass a LangGraph checkpointer (SqliteSaver) here
+    #   to enable mid-pipeline resume on transient failure — valuable when the LLM
+    #   quota is hit partway through a multi-section retrieval run.
+    try:
+        final_state = pipeline.invoke(initial)
+    except Exception as exc:
+        log.error(f"[Pipeline] LangGraph graph execution failed: {exc}", exc_info=True)
+        raise RuntimeError(f"Pipeline graph execution failed: {exc}") from exc
 
     if final_state.get("errors"):
         log.warning(f"Pipeline completed with errors: {final_state['errors']}")

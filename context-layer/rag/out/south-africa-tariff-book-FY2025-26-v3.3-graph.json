@@ -1,0 +1,436 @@
+{
+  "md_file": "south-africa-tariff-book-FY2025-26-v3.3.md",
+  "doc_id": "52b7d06580d0",
+  "total_top_level": 47,
+  "processing_units": 37,
+  "rules": {
+    "A": "direct fee content → LLM call",
+    "B": "recurse to children",
+    "C": "skip"
+  },
+  "tree": [
+    {
+      "number": "",
+      "title": "**SECTION 1**",
+      "level": 2,
+      "rule": "C",
+      "selected": false,
+      "direct_content_chars": 0,
+      "children": []
+    },
+    {
+      "number": "",
+      "title": "**1.1 LIGHT DUES ON VESSELS**",
+      "level": 2,
+      "rule": "A",
+      "selected": true,
+      "direct_content_chars": 646,
+      "children": []
+    },
+    {
+      "number": "",
+      "title": "**1.1.1 LIGHT DUES**",
+      "level": 2,
+      "rule": "C",
+      "selected": false,
+      "direct_content_chars": 0,
+      "children": []
+    },
+    {
+      "number": "",
+      "title": "Payable by:",
+      "level": 2,
+      "rule": "A",
+      "selected": true,
+      "direct_content_chars": 1520,
+      "children": []
+    },
+    {
+      "number": "",
+      "title": "**Exemptions**",
+      "level": 2,
+      "rule": "A",
+      "selected": true,
+      "direct_content_chars": 448,
+      "children": []
+    },
+    {
+      "number": "",
+      "title": "**1.2 SAMSA LEVY**",
+      "level": 2,
+      "rule": "A",
+      "selected": true,
+      "direct_content_chars": 304,
+      "children": []
+    },
+    {
+      "number": "",
+      "title": "**SECTION 2**",
+      "level": 2,
+      "rule": "C",
+      "selected": false,
+      "direct_content_chars": 0,
+      "children": []
+    },
+    {
+      "number": "",
+      "title": "**VESSEL TRAFFIC SERVICES (VTS)**",
+      "level": 2,
+      "rule": "C",
+      "selected": false,
+      "direct_content_chars": 0,
+      "children": []
+    },
+    {
+      "number": "",
+      "title": "**2.1 VTS CHARGES ON VESSELS**",
+      "level": 2,
+      "rule": "A",
+      "selected": true,
+      "direct_content_chars": 479,
+      "children": []
+    },
+    {
+      "number": "",
+      "title": "**2.1.1 VTS CHARGES**",
+      "level": 2,
+      "rule": "A",
+      "selected": true,
+      "direct_content_chars": 825,
+      "children": []
+    },
+    {
+      "number": "",
+      "title": "**SECTION 3**",
+      "level": 2,
+      "rule": "C",
+      "selected": false,
+      "direct_content_chars": 0,
+      "children": []
+    },
+    {
+      "number": "",
+      "title": "**MARINE SERVICES**",
+      "level": 2,
+      "rule": "C",
+      "selected": false,
+      "direct_content_chars": 0,
+      "children": []
+    },
+    {
+      "number": "",
+      "title": "**3.1 GENERAL TERMS AND CONDITIONS**",
+      "level": 2,
+      "rule": "C",
+      "selected": false,
+      "direct_content_chars": 0,
+      "children": []
+    },
+    {
+      "number": "",
+      "title": "**“Ordinary Working Hours”**",
+      "level": 2,
+      "rule": "A",
+      "selected": true,
+      "direct_content_chars": 194,
+      "children": []
+    },
+    {
+      "number": "",
+      "title": "Port of East London",
+      "level": 2,
+      "rule": "A",
+      "selected": true,
+      "direct_content_chars": 463,
+      "children": []
+    },
+    {
+      "number": "",
+      "title": "**“Special Services”**",
+      "level": 2,
+      "rule": "A",
+      "selected": true,
+      "direct_content_chars": 604,
+      "children": []
+    },
+    {
+      "number": "",
+      "title": "**3.2 MARINE SERVICES INCENTIVE**",
+      "level": 2,
+      "rule": "A",
+      "selected": true,
+      "direct_content_chars": 910,
+      "children": []
+    },
+    {
+      "number": "",
+      "title": "**3.3 PILOTAGE SERVICES**",
+      "level": 2,
+      "rule": "A",
+      "selected": true,
+      "direct_content_chars": 941,
+      "children": []
+    },
+    {
+      "number": "",
+      "title": "**A surcharge of 50% is payable at all ports in the following instances:**",
+      "level": 2,
+      "rule": "A",
+      "selected": true,
+      "direct_content_chars": 483,
+      "children": []
+    },
+    {
+      "number": "",
+      "title": "**A surcharge of 50% is only applicable at the Port of Durban in the following instance:**",
+      "level": 2,
+      "rule": "A",
+      "selected": true,
+      "direct_content_chars": 140,
+      "children": []
+    },
+    {
+      "number": "",
+      "title": "At the Port of Saldanha:",
+      "level": 2,
+      "rule": "A",
+      "selected": true,
+      "direct_content_chars": 87,
+      "children": []
+    },
+    {
+      "number": "",
+      "title": "**Exemptions**",
+      "level": 2,
+      "rule": "A",
+      "selected": true,
+      "direct_content_chars": 95,
+      "children": []
+    },
+    {
+      "number": "",
+      "title": "**3.4 SURVEY/EXAMINATION OF SMALL VESSELS AND LIFE SAVING APPLIANCES**",
+      "level": 2,
+      "rule": "A",
+      "selected": true,
+      "direct_content_chars": 174,
+      "children": []
+    },
+    {
+      "number": "",
+      "title": "**3.5 PILOTAGE EXEMPTION CERTIFICATE**",
+      "level": 2,
+      "rule": "A",
+      "selected": true,
+      "direct_content_chars": 1166,
+      "children": []
+    },
+    {
+      "number": "",
+      "title": "**3.6 TUGS/VESSEL ASSISTANCE AND/OR ATTENDANCE**",
+      "level": 2,
+      "rule": "A",
+      "selected": true,
+      "direct_content_chars": 243,
+      "children": []
+    },
+    {
+      "number": "0.50",
+      "title": "Represents workboat",
+      "level": 2,
+      "rule": "A",
+      "selected": true,
+      "direct_content_chars": 2793,
+      "children": []
+    },
+    {
+      "number": "",
+      "title": "**3.7 MISCELLANEOUS TUG/VESSEL SERVICES**",
+      "level": 2,
+      "rule": "C",
+      "selected": false,
+      "direct_content_chars": 0,
+      "children": []
+    },
+    {
+      "number": "",
+      "title": "**Tanker fire watch, fire fighting and standby services**",
+      "level": 2,
+      "rule": "A",
+      "selected": true,
+      "direct_content_chars": 382,
+      "children": []
+    },
+    {
+      "number": "",
+      "title": "**All ports excluding the port of Saldanha**",
+      "level": 2,
+      "rule": "A",
+      "selected": true,
+      "direct_content_chars": 2926,
+      "children": []
+    },
+    {
+      "number": "",
+      "title": "**3.8 BERTHING SERVICES**",
+      "level": 2,
+      "rule": "A",
+      "selected": true,
+      "direct_content_chars": 1784,
+      "children": []
+    },
+    {
+      "number": "",
+      "title": "**3.9 RUNNING OF VESSEL LINES**",
+      "level": 2,
+      "rule": "A",
+      "selected": true,
+      "direct_content_chars": 1704,
+      "children": []
+    },
+    {
+      "number": "",
+      "title": "**3.10 HIRE OF MARINE EQUIPMENT/MARINE SERVICES**",
+      "level": 2,
+      "rule": "A",
+      "selected": true,
+      "direct_content_chars": 1080,
+      "children": []
+    },
+    {
+      "number": "",
+      "title": "**SECTION 4**",
+      "level": 2,
+      "rule": "C",
+      "selected": false,
+      "direct_content_chars": 0,
+      "children": []
+    },
+    {
+      "number": "",
+      "title": "**PORT FEES ON VESSELS, MISCELLANEOUS FEES AND SERVICES**",
+      "level": 2,
+      "rule": "C",
+      "selected": false,
+      "direct_content_chars": 0,
+      "children": []
+    },
+    {
+      "number": "",
+      "title": "**4.1 PORT FEES ON VESSELS**",
+      "level": 2,
+      "rule": "A",
+      "selected": true,
+      "direct_content_chars": 326,
+      "children": []
+    },
+    {
+      "number": "",
+      "title": "**4.1.1 PORT DUES**",
+      "level": 2,
+      "rule": "A",
+      "selected": true,
+      "direct_content_chars": 2010,
+      "children": []
+    },
+    {
+      "number": "",
+      "title": "**Exemptions**",
+      "level": 2,
+      "rule": "A",
+      "selected": true,
+      "direct_content_chars": 699,
+      "children": []
+    },
+    {
+      "number": "",
+      "title": "**4.1.2 BERTH DUES**",
+      "level": 2,
+      "rule": "A",
+      "selected": true,
+      "direct_content_chars": 1877,
+      "children": []
+    },
+    {
+      "number": "",
+      "title": "**Exemptions**",
+      "level": 2,
+      "rule": "A",
+      "selected": true,
+      "direct_content_chars": 651,
+      "children": []
+    },
+    {
+      "number": "",
+      "title": "**Berth dues payable by vessels shipping ore at the ore loading jetty at the Port of Saldanha**",
+      "level": 2,
+      "rule": "A",
+      "selected": true,
+      "direct_content_chars": 709,
+      "children": []
+    },
+    {
+      "number": "",
+      "title": "**4.2 PORT DUES FOR SMALL VESSELS, HULKS AND PLEASURE VESSELS**",
+      "level": 2,
+      "rule": "A",
+      "selected": true,
+      "direct_content_chars": 107,
+      "children": []
+    },
+    {
+      "number": "",
+      "title": "**Small vessels**",
+      "level": 2,
+      "rule": "A",
+      "selected": true,
+      "direct_content_chars": 755,
+      "children": []
+    },
+    {
+      "number": "",
+      "title": "**Hulks**",
+      "level": 2,
+      "rule": "A",
+      "selected": true,
+      "direct_content_chars": 313,
+      "children": []
+    },
+    {
+      "number": "",
+      "title": "**Pleasure vessels**",
+      "level": 2,
+      "rule": "A",
+      "selected": true,
+      "direct_content_chars": 378,
+      "children": []
+    },
+    {
+      "number": "",
+      "title": "**Visiting Vessels (not engaged in trade) Foreign/Local yachts (port dues)**",
+      "level": 2,
+      "rule": "A",
+      "selected": true,
+      "direct_content_chars": 904,
+      "children": []
+    },
+    {
+      "number": "",
+      "title": "**4.3 MISCELLANEOUS SERVICES**",
+      "level": 2,
+      "rule": "A",
+      "selected": true,
+      "direct_content_chars": 518,
+      "children": []
+    },
+    {
+      "number": "",
+      "title": "**4.3.1 FIRE AND EMERGENCY SERVICES**",
+      "level": 2,
+      "rule": "A",
+      "selected": true,
+      "direct_content_chars": 1428,
+      "children": []
+    }
+  ]
+}

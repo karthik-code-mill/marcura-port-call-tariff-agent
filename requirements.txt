@@ -18,6 +18,11 @@ langchain-google-genai          # google_genai:*   (default)
 pydantic>=2.0
 python-dotenv
 
+# ── Observability ─────────────────────────────────────────────────────────────
+opentelemetry-api>=1.20.0
+opentelemetry-sdk>=1.20.0
+# TODO(azure-monitor): pip install azure-monitor-opentelemetry-exporter
+
 # ── API layer ─────────────────────────────────────────────────────────────────
 fastapi
 uvicorn[standard]

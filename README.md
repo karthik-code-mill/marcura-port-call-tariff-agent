@@ -720,3 +720,37 @@ The extraction LLM self-scores each record:
 After extraction, `validation_agent` takes records with confidence below 0.6 or non-empty `unmodeled_clauses` and submits them back to the LLM, this time with the source Markdown section alongside the extracted record. The question is specific: does the extracted record faithfully represent what the source text says, and can it be used for calculation without human review?
 
 Records the LLM marks `on_hold` are not deleted. They remain in the database at `extraction_confidence = 0.0` and are recorded in `validation_holds.json`. Clearing a hold (once a human has reviewed and corrected the record) requires removing its entry from the JSON file — the record's confidence in the DB should be updated at the same time. After that, it re-enters the retrieval pool on the next calculation run.
+
+---
+
+## References
+
+### System Design
+
+[`docs/system-design-v2.md`](docs/system-design-v2.md)
+
+The primary design document. Covers:
+- Problem framing — why standard RAG doesn't work for hierarchical tariff documents
+- Full architecture (Stage 1 and Stage 2 pipelines with component diagrams)
+- Storage layer design (TariffStore schema, ChunkStore hierarchy, DB naming conventions)
+- Retrieval strategy — vectorless hierarchical SQL and why it was chosen over embeddings
+- Guardrail placement rationale at each pipeline boundary
+- Observability and telemetry design
+- Production deployment considerations (PostgreSQL migration, Azure Monitor)
+
+### Architectural Decision Records
+
+[`docs/ADR.md`](docs/ADR.md)
+
+Records the significant decisions made during design and the trade-offs considered:
+- **Framework choice** — LangGraph selected over a plain Python step executor; rationale covers the HITL roadmap, state persistence requirements, and the cost of the overhead for this project scope
+- **LLM provider abstraction** — `init_chat_model` + `LLM_MODEL` env var rather than SDK-specific client code; allows provider switching without agent changes
+- **Vectorless retrieval** — structured SQL over GT bands and port names rather than embedding-based similarity; auditability and determinism were the deciding factors
+- **Two-stage pipeline separation** — document ingestion (slow, once per tariff year) decoupled from tariff calculation (fast, per vessel call)
+- **Confidence scoring and on-hold disposition** — records with uncertain extraction stay in the DB at confidence 0.0 rather than being deleted; preserves the extraction work while blocking the record from calculations until reviewed
+
+### Detailed Setup Guide
+
+[`docs/setup-and-execution.md`](docs/setup-and-execution.md)
+
+Step-by-step instructions covering installation, environment configuration, LLM provider switching, Stage 1 ingestion options, Stage 2 calculation via CLI and API, and troubleshooting common errors (quota exhaustion, missing active version, DB not found).

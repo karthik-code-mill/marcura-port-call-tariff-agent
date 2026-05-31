@@ -80,6 +80,7 @@ def run(
     version_tag: str = "",
     output_dir: Path = OUT_DIR,
     converter_fn: Callable[..., str] = _pymupdf_convert,
+    delete_after_parse: bool = False,
 ) -> Path:
     """
     Convert *pdf_path* to Markdown and write the result to disk.
@@ -89,6 +90,10 @@ def run(
     converter_fn:
         Callable with signature (pdf_path, page_start, page_end, two_column_layout) -> str.
         Defaults to pymupdf4llm. Swap for an LLM-based converter without changing callers.
+    delete_after_parse:
+        When True, the source PDF is deleted after the Markdown file is successfully
+        written. Deletion failure logs a warning but does not raise — the Markdown is
+        already on disk and the pipeline continues normally.
 
     Returns
     -------
@@ -141,5 +146,15 @@ def run(
 
         span.set_attribute("md_chars", len(md))
         log.info(f"[ParserAgent] done   {out_path.name}  ({len(md):,} chars)")
+
+        if delete_after_parse:
+            try:
+                pdf_path.unlink()
+                span.set_attribute("source_pdf_deleted", True)
+                log.info(f"[ParserAgent] deleted source PDF: {pdf_path.name}")
+            except OSError as exc:
+                # Markdown is already written — deletion failure is non-fatal.
+                span.set_attribute("source_pdf_deleted", False)
+                log.warning(f"[ParserAgent] could not delete source PDF {pdf_path.name}: {exc}")
 
     return out_path

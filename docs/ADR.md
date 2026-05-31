@@ -104,6 +104,45 @@ SEC     FEE ITEM                                      GT RANGE               CAL
  Pipeline complete — version=FY2025-26-v1.7  415 fee items stored,
 
 
+## 3 Data Store — SQLite (Assignment) → PostgreSQL (Production)
+
+**Decision:** Use SQLite for all persistent stores (`TariffStore`, `ChunkStore`) throughout this assignment.
+
+**Status:** Accepted for assignment scope. PostgreSQL path documented and descoped.
+
+### Why SQLite here
+
+SQLite requires no server, no credentials, no schema migration tooling, and no infrastructure setup. Each tariff database is a single file with a versioned name (`south-africa-tariff-store-FY2025-26-v3.3.db`). Switching versions, rolling back, or inspecting data is a file operation. For an assignment targeting a single-country dataset updated once a year, this is entirely sufficient.
+
+The abstraction is also already in place. `TariffStore` and `ChunkStore` are the only classes in the codebase that hold a database connection. All agent code calls methods on these classes — no agent imports `sqlite3` directly. Replacing the underlying connection requires changes in exactly two files and nowhere else.
+
+### Why not PostgreSQL for the assignment
+
+Standing up a PostgreSQL instance (local or cloud), managing connection strings, writing migration scripts, and handling schema versioning adds infrastructure overhead with no benefit at this scale. It would shift the submission's focus from the AI pipeline to infrastructure plumbing.
+
+### What PostgreSQL enables that SQLite cannot
+
+**Concurrent Stage 1 ingestion.** SQLite uses file-level write locking. Two ingestion runs against the same database file at the same time — South Africa and UAE being ingested simultaneously, or two workers processing different sections of the same document in parallel — will produce `database is locked` errors. PostgreSQL uses row-level locking and handles concurrent upserts to `tariff_fee_items` correctly without any application-level coordination.
+
+**Multi-instance API serving.** The FastAPI server is currently stateless per request, but `validation_holds.json` is a file on the local filesystem. If the API is scaled to multiple pods (Kubernetes, cloud run, multiple workers), each pod sees its own copy of the holds file. A hold written by the validation agent during ingestion on pod A is invisible to pod B when it handles a calculation request. PostgreSQL (or Redis) as the holds store eliminates this split-brain condition.
+
+**Connection pooling.** SQLite connections are not thread-safe across processes. PostgreSQL with `pgBouncer` or SQLAlchemy's pool supports high-concurrency Stage 2 workloads without contention.
+
+### Migration path (when needed)
+
+The scope of changes is limited to `TariffStore.__init__` and `ChunkStore.__init__`:
+
+- Replace `sqlite3.connect(db_path)` with a PostgreSQL driver connection (`psycopg2`, `asyncpg`, or SQLAlchemy engine)
+- Convert the `CREATE TABLE` DDL: `TEXT` JSON columns → `JSONB`, `AUTOINCREMENT` → `SERIAL`, `ON CONFLICT DO UPDATE` syntax is compatible with minor adjustments
+- Replace `sqlite3.Row` row access with `RealDictCursor` or equivalent dict-like rows
+- Move DB routing from file paths (`db_path_for_version`) to a `DATABASE_URL` environment variable with a schema or table-prefix convention per country and version
+
+No agent code (`retriever_agent`, `calculator_agent`, `rule_extractor_agent`, `validation_agent`) changes.
+
+`validation_holds.json` requires a separate migration to a shared store (a `validation_holds` PostgreSQL table or Redis hash) before multi-instance deployment.
+
+---
+
 ## Considered
 Heirarchial paged Index
 he problem is that most tariff PDFs are not authored like books:

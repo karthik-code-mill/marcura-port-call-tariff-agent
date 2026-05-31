@@ -20,6 +20,7 @@ class DocumentPrepState(TypedDict):
     page_end:          Optional[int]
     two_column_layout: bool
     skip_parse:        bool   # True → use md_path directly, skip node_parse
+    delete_after_parse: bool  # True → remove the source PDF once Markdown is written
 
     # ── Inter-node outputs ────────────────────────────────────────────────────
     md_path:            Optional[Path]             # written by node_parse

@@ -96,6 +96,8 @@ context-layer/
 
 Tariff stores are **versioned by country and version tag** (`FY2025-26-v3.2`). Switching active versions is an API operation — it only updates `app_config.json` and requires no data migration.
 
+> **Assignment scope note — SQLite only.** The current implementation uses SQLite for all persistent stores (`TariffStore`, `ChunkStore`). This is intentional for the assignment: SQLite is file-based, zero-config, and keeps the full data layer self-contained within the repository. The production data layer (PostgreSQL) and the concerns that come with it — concurrent writers, connection pooling, schema migrations, and multi-instance deployment — are **explicitly descoped** from this submission. See §9 and §10 for the full production path.
+
 ---
 
 ## 3. Stage 1 — Document Preparation
@@ -752,6 +754,8 @@ LangGraph gives each pipeline step an isolated state node with typed I/O. This m
 **Why SQLite for the tariff store?**  
 SQLite is file-based and version-tagged. Each tariff DB is a single file (`south-africa-tariff-store-FY2025-26-v3.2.db`) that can be moved, archived, or rolled back by renaming. Active-version switching is a config file update — no data migration, no downtime. For a system that deals with one-country tariff data updated annually, SQLite's transaction guarantees and SQL expressiveness are more than sufficient.
 
+This choice is **scoped to the assignment**. SQLite is a single-writer store — it cannot support concurrent Stage 1 ingestion runs across multiple agent instances, nor can it serve Stage 2 reads from multiple API servers without file contention. In production, `TariffStore` and `ChunkStore` would point to a PostgreSQL schema. The abstraction boundary is already in place: both classes expose a `conn` object and a fixed set of methods. Replacing the SQLite connection with a PostgreSQL one (`psycopg2` or `asyncpg`) requires changes only inside those two classes — no agent code changes. See §10 for the full migration path.
+
 **Why no embeddings in retrieval?**  
 The retrieval problem here is not a semantic similarity problem — it is a structured filtering problem. A GT band of 10,001–50,000 must match exactly, not approximately. Port names must match exactly, not by semantic proximity. Embedding these structured dimensions would introduce false positives and make the retrieval decision harder to explain. The SQL approach is deterministic, auditable, and fast.
 
@@ -806,8 +810,54 @@ Replace the in-process `BusinessMetricsCollector` singleton with a full OpenTele
 
 The data model and config layer already support multiple countries (`app_config.json` is keyed by country). Expanding to a second country requires:
 
-1. A new PDF in `context-layer/rag/raw/`
+1. A new PDF in `context-layer/rag/raw/{country_slug}/`
 2. Running the Stage 1 pipeline with `--country "Kenya"` (for example)
 3. A new country-specific DB is created; the active version for South Africa is unaffected
 
 The execution pipeline (`/api/v2/calculate`) selects the correct DB based on the `country` field in the `VesselInput`. No code changes required.
+
+---
+
+### Production Data Layer — PostgreSQL and Multi-Instance Support
+
+**Descoped for the assignment. Documented here as the production path.**
+
+The current SQLite implementation has two constraints that preclude production deployment:
+
+**1. Single-writer concurrency.** SQLite uses file-level locking. Running two Stage 1 ingestion jobs simultaneously (e.g., South Africa and UAE tariff books being ingested at the same time) will cause one to block or fail with a `database is locked` error. Stage 2 reads are safe under concurrent access — SQLite handles multiple readers — but any Stage 1 write happening alongside Stage 2 reads will produce contention.
+
+**2. No multi-instance API serving.** If the FastAPI server is scaled horizontally (multiple pods in Kubernetes, multiple workers behind a load balancer), each instance holds an independent SQLite file on its local filesystem. There is no shared state. A tariff version activated on instance A is invisible to instance B.
+
+**PostgreSQL migration path:**
+
+Both `TariffStore` (`src/agents/document_preparation_agent.py`) and `ChunkStore` (`src/agents/hierarchical_chunk_agent.py`) are the only classes that touch the database directly. All agent code goes through them via method calls — no agent holds a raw DB connection. Migrating to PostgreSQL means:
+
+1. Replace `sqlite3.connect(db_path)` with `psycopg2.connect(DATABASE_URL)` (sync) or `asyncpg.connect()` (async) inside both classes.
+2. Migrate the `CREATE TABLE` DDL from SQLite syntax to PostgreSQL — the schemas are simple enough that this is a one-time conversion. `TEXT` columns storing JSON arrays become `JSONB` for indexed querying. `AUTOINCREMENT` becomes `SERIAL` or `BIGSERIAL`.
+3. Replace the `UNIQUE ... ON CONFLICT DO UPDATE` SQLite upsert with PostgreSQL's equivalent `INSERT ... ON CONFLICT DO UPDATE SET`.
+4. Replace `sqlite3.Row` dict-like row access with `psycopg2.extras.RealDictCursor` or equivalent.
+5. Set `DATABASE_URL` as an environment variable; remove all path constants (`DB_DIR`, `db_path_for_version`) from the runtime path — DB routing per country becomes a schema or table-prefix convention, not a file path.
+
+```
+# Environment (production)
+DATABASE_URL=postgresql://user:pass@pg-host:5432/tariff_db
+
+# Schema convention (replaces per-file SQLite databases)
+tariff_fee_items      → south_africa_fy2025_26_v3_3_tariff_fee_items
+ingestion_log         → south_africa_fy2025_26_v3_3_ingestion_log
+hierarchical_chunks   → south_africa_chunks
+```
+
+Or use a single schema per country with a `version_tag` column rather than per-version tables — this simplifies cross-version queries but requires more careful version filtering in the retriever SQL.
+
+**Multi-instance Stage 1 (ingestion):**
+
+With PostgreSQL, concurrent ingestion runs across multiple agent instances are safe — PostgreSQL's row-level locking handles concurrent upserts to `tariff_fee_items` correctly. The `ingestion_log` table's `UNIQUE(doc_id, section_id)` constraint prevents duplicate processing even if two instances pick up the same section simultaneously.
+
+For very large tariff books, a work-queue pattern is preferable: a coordinator process (or a simple database-backed task table) assigns sections to available workers. Each worker processes its assigned sections and writes results independently. LangGraph's checkpointing mechanism integrates naturally here — the checkpointer can be backed by PostgreSQL instead of SQLite.
+
+**Multi-instance Stage 2 (calculation API):**
+
+Stage 2 is already stateless at the request level — each `POST /api/v2/calculate` opens a fresh `TariffStore` connection, runs the pipeline, and closes it. With PostgreSQL behind a connection pool (e.g., `pgBouncer` or SQLAlchemy's built-in pool), horizontal scaling is straightforward. There is no per-instance state to synchronise.
+
+The `validation_holds.json` file is the one remaining file-system dependency in Stage 2. In a multi-instance deployment, this must be moved to a shared store — either a dedicated PostgreSQL table (`validation_holds`) or a distributed cache (Redis). The holds filter in `retriever_agent._filter_validation_holds()` reads from this source on every request; the write side (`validation_agent`) writes to it once per document ingestion.

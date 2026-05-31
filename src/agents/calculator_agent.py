@@ -5,7 +5,8 @@ Autonomous agent. Single public interface: run().
 
 Internal steps (fully encapsulated — not exposed to orchestrator):
   §2.3.2.1  Deterministic formula evaluation — Python eval, no LLM involved
-  §2.3.2.2  LLM audit pass — validates amounts, flags exceptions
+  §2.3.2.2  Calculation guardrail            — rejects negative/extreme amounts
+  §2.3.2.3  LLM audit pass                  — validates amounts, flags exceptions
             Invoice assembly
 """
 
@@ -25,6 +26,7 @@ from langchain_core.messages import HumanMessage, SystemMessage
 load_dotenv()
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent.parent))  # project root for guardrails
 
 from models.vessel import VesselInput
 from models.retrieval import ApplicableFeeRecord
@@ -35,6 +37,10 @@ from models.invoice import (
     TariffInvoice,
     TariffLineItem,
 )
+from guardrails.calculation_guardrail import CalculationGuardrail
+from guardrails.llm_output_guardrail import LLMOutputGuardrail, GuardrailViolationError
+from monitoring.telemetry import get_tracer
+from monitoring.business_metrics import metrics
 
 log = logging.getLogger(__name__)
 
@@ -62,6 +68,16 @@ _EVAL_GLOBALS: Dict[str, Any] = {
     "float":   float,
 }
 
+_calc_guardrail = CalculationGuardrail()
+_llm_guardrail  = LLMOutputGuardrail()
+
+# OpenTelemetry tracer — console exporter by default (see monitoring/telemetry.py).
+# TODO(azure-monitor): Switch ConsoleSpanExporter → AzureMonitorTraceExporter
+#   in monitoring/telemetry.py and set APPLICATIONINSIGHTS_CONNECTION_STRING env var.
+# TODO(azure-insights): Spans from calculator_agent should link to the parent
+#   retriever_agent span via W3C TraceContext so the full pipeline is one trace.
+tracer = get_tracer("tariff.calculator_agent")
+
 
 # ─── Public Interface ─────────────────────────────────────────────────────────
 
@@ -73,35 +89,67 @@ def run(
 ) -> TariffInvoice:
     """
     Compute a TariffInvoice from applicable fees.
-    Deterministic formula evaluation, then LLM audit, then invoice assembly.
+    Deterministic formula evaluation, then calculation guardrail, then LLM audit,
+    then invoice assembly.
     """
-    log.info(f"[CalculatorAgent] {len(applicable_fees)} fees  port={vessel.port}  GT={vessel.gross_tonnage}")
+    with tracer.start_as_current_span("calculator.run") as span:
+        span.set_attribute("calculator.fee_count",  len(applicable_fees))
+        span.set_attribute("vessel.port",           vessel.port)
+        span.set_attribute("vessel.gross_tonnage",  vessel.gross_tonnage)
 
-    computed: List[ComputedLineItem] = []
-    for fee in applicable_fees:
-        line = _compute_line(fee, vessel)
-        computed.append(line)
-        log.info(
-            f"  {fee.section}  {fee.tariff_fee_item[:40]:<40}  "
-            f"base={line.base_amount:>12,.2f}  "
-            f"surcharge={line.surcharge_amount:>10,.2f}  "
-            f"total={line.total_amount:>12,.2f}"
-            + ("  [FORMULA ERROR]" if line.computation_error else "")
+        log.info(f"[CalculatorAgent] {len(applicable_fees)} fees  port={vessel.port}  GT={vessel.gross_tonnage}")
+
+        # §2.3.2.1 — Deterministic formula evaluation
+        computed: List[ComputedLineItem] = []
+        for fee in applicable_fees:
+            line = _compute_line(fee, vessel)
+            computed.append(line)
+            log.info(
+                f"  {fee.section}  {fee.tariff_fee_item[:40]:<40}  "
+                f"base={line.base_amount:>12,.2f}  "
+                f"surcharge={line.surcharge_amount:>10,.2f}  "
+                f"total={line.total_amount:>12,.2f}"
+                + ("  [FORMULA ERROR]" if line.computation_error else "")
+            )
+            if line.computation_error:
+                metrics.record_calculation_error(fee.section, fee.tariff_fee_item, line.computation_error)
+
+        formula_errors = sum(1 for c in computed if c.computation_error)
+        span.set_attribute("calculator.formula_errors", formula_errors)
+
+        # §2.3.2.2 — Calculation guardrail: block negative / extreme values
+        extra_review: List[str] = list(human_review_items)
+        if computed:
+            guardrail_result = _calc_guardrail.check(computed)
+            if not guardrail_result.passed:
+                metrics.record_guardrail_rejection("calculation", len(guardrail_result.violations))
+                span.set_attribute("calculator.guardrail_violations", len(guardrail_result.violations))
+                for section, fee_item in guardrail_result.flagged_items:
+                    if fee_item not in extra_review:
+                        extra_review.append(fee_item)
+                        log.warning(
+                            f"[CalculatorAgent] CalculationGuardrail flagged "
+                            f"{section}::{fee_item} for human review"
+                        )
+
+        # §2.3.2.3 — LLM audit pass
+        fee_map = {(f.section, f.tariff_fee_item): f for f in applicable_fees}
+        audit   = _audit_lines(computed, fee_map, vessel) if computed else None
+
+        invoice = _assemble_invoice(
+            vessel=vessel,
+            computed_lines=computed,
+            applicable_fees=applicable_fees,
+            audit=audit,
+            not_applicable=not_applicable,
+            human_review_items=extra_review,
         )
 
-    fee_map = {(f.section, f.tariff_fee_item): f for f in applicable_fees}
-    audit   = _audit_lines(computed, fee_map, vessel) if computed else None
+        span.set_attribute("calculator.line_items", len(invoice.line_items))
+        span.set_attribute("calculator.subtotal",   invoice.subtotal)
 
-    invoice = _assemble_invoice(
-        vessel=vessel,
-        computed_lines=computed,
-        applicable_fees=applicable_fees,
-        audit=audit,
-        not_applicable=not_applicable,
-        human_review_items=human_review_items,
-    )
-    log.info(f"[CalculatorAgent] Invoice: {len(invoice.line_items)} items  subtotal={invoice.subtotal:,.2f}")
-    return invoice
+        log.info(f"[CalculatorAgent] Invoice: {len(invoice.line_items)} items  subtotal={invoice.subtotal:,.2f}")
+        return invoice
 
 
 # ─── Internal Steps ───────────────────────────────────────────────────────────
@@ -179,17 +227,17 @@ def _audit_lines(
     for line in computed:
         fee = fee_map.get((line.section, line.tariff_fee_item))
         review_payload.append({
-            "section":              line.section,
-            "tariff_fee_item":      line.tariff_fee_item,
-            "formula_used":         line.formula_used,
-            "formula_inputs":       line.formula_inputs,
-            "base_amount":          line.base_amount,
-            "surcharge_amount":     line.surcharge_amount,
-            "total_amount":         line.total_amount,
-            "active_surcharges":    line.active_surcharges,
-            "computation_error":    line.computation_error,
-            "exceptions":           fee.exceptions        if fee else [],
-            "unmodeled_clauses":    fee.unmodeled_clauses  if fee else [],
+            "section":               line.section,
+            "tariff_fee_item":       line.tariff_fee_item,
+            "formula_used":          line.formula_used,
+            "formula_inputs":        line.formula_inputs,
+            "base_amount":           line.base_amount,
+            "surcharge_amount":      line.surcharge_amount,
+            "total_amount":          line.total_amount,
+            "active_surcharges":     line.active_surcharges,
+            "computation_error":     line.computation_error,
+            "exceptions":            fee.exceptions         if fee else [],
+            "unmodeled_clauses":     fee.unmodeled_clauses  if fee else [],
             "extraction_confidence": fee.extraction_confidence if fee else 1.0,
         })
 
@@ -210,15 +258,31 @@ def _audit_lines(
     ]
     structured_llm = _llm.with_structured_output(AuditResponse)
 
-    for attempt in range(max_retries):
-        try:
-            return structured_llm.invoke(messages)
-        except Exception as exc:
-            if attempt == max_retries - 1:
-                raise
-            wait = 2 ** attempt
-            log.warning(f"[CalculatorAgent] Audit LLM failed (attempt {attempt + 1}) — retrying in {wait}s: {exc}")
-            time.sleep(wait)
+    with tracer.start_as_current_span("calculator.audit_lines") as span:
+        span.set_attribute("calculator.audit_item_count", len(review_payload))
+        # TODO(azure-monitor): Add span events for each retry so Application
+        #   Insights can track LLM reliability and latency for the audit call.
+
+        for attempt in range(max_retries):
+            try:
+                result = structured_llm.invoke(messages)
+                validated = _llm_guardrail.validate(result, AuditResponse)
+                span.set_attribute("calculator.audit_attempts", attempt + 1)
+                # TODO(token-metrics): Extract token usage from LLM response metadata
+                #   when the LangChain provider exposes it, then call:
+                #   metrics.record_token_usage("calculator_agent", prompt_tokens, completion_tokens)
+                return validated
+            except GuardrailViolationError as exc:
+                log.error(f"[CalculatorAgent] LLM output guardrail violation in audit: {exc}")
+                metrics.record_guardrail_rejection("llm_output", 1)
+                if attempt == max_retries - 1:
+                    raise
+            except Exception as exc:
+                if attempt == max_retries - 1:
+                    raise
+                wait = 2 ** attempt
+                log.warning(f"[CalculatorAgent] Audit LLM failed (attempt {attempt + 1}) — retrying in {wait}s: {exc}")
+                time.sleep(wait)
 
 
 def _assemble_invoice(

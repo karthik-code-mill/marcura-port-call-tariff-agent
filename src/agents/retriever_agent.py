@@ -85,7 +85,7 @@ _APPLICABILITY_SYSTEM = (_PROMPTS_DIR / "retriever_agent_sp_v3.0.md").read_text(
 # passed to the LLM evaluator even if their DB confidence was not yet zeroed.
 _HOLDS_PATH = (
     Path(__file__).resolve().parent.parent.parent
-    / "context-layer" / "config" / "validation_holds.json"
+    / "config" / "validation_holds.json"
 )
 
 # OpenTelemetry tracer — console exporter by default (see monitoring/telemetry.py).
@@ -250,12 +250,21 @@ def _query_candidate_fees(tariff_store, vessel: VesselInput) -> Tuple[List[dict]
             if existing is None:
                 best[key] = d
                 continue
-            # Prefer the row with fewer unmodeled clauses, then higher confidence.
-            existing_unmodeled = len(_parse_json_field(existing.get("unmodeled_clauses"), []))
-            new_unmodeled      = len(_parse_json_field(d.get("unmodeled_clauses"), []))
-            existing_conf      = existing.get("extraction_confidence") or 0.0
-            new_conf           = d.get("extraction_confidence") or 0.0
-            if (new_unmodeled, -new_conf) < (existing_unmodeled, -existing_conf):
+            # Prefer: (1) fewer unmodeled clauses, (2) higher confidence,
+            # (3) row has a formula over row with only a static base_fee.
+            # The formula tie-breaker catches cases like LIGHT DUES where two rows
+            # share identical quality scores but one has a GT-based formula and the
+            # other only a flat base_fee — the formula row carries more information.
+            existing_unmodeled  = len(_parse_json_field(existing.get("unmodeled_clauses"), []))
+            new_unmodeled       = len(_parse_json_field(d.get("unmodeled_clauses"), []))
+            existing_conf       = existing.get("extraction_confidence") or 0.0
+            new_conf            = d.get("extraction_confidence") or 0.0
+            existing_has_formula = bool((existing.get("formula") or "").strip())
+            new_has_formula      = bool((d.get("formula") or "").strip())
+            # Lower tuple = better row. `not has_formula` is True (1) for rows
+            # without a formula, so formula rows sort before no-formula rows on a tie.
+            if (new_unmodeled, -new_conf, not new_has_formula) < \
+               (existing_unmodeled, -existing_conf, not existing_has_formula):
                 best[key] = d
 
         raw_candidates = list(best.values())
@@ -372,6 +381,10 @@ def _evaluate_applicability(
             "section": f["section"],
             "tariff_fee_item": f["tariff_fee_item"],
             "port": f["port"],
+            # port_condition: verbatim clause from the source document that determined
+            # the port assignment. Gives the LLM the original wording to reason against
+            # rather than just the normalised port label.
+            "port_condition": f.get("port_condition") or "",
             "vessel_gt_range": f["vessel_gt_range"],
             "conditions": _parse_json_field(f["conditions"], []),
             "surcharges": _parse_json_field(f["surcharges"], []),
@@ -460,6 +473,7 @@ def _assemble_applicable_fees(
             section=fee["section"],
             tariff_fee_item=fee["tariff_fee_item"],
             port=fee["port"],
+            port_condition=fee.get("port_condition") or "",
             vessel_gt_range=fee["vessel_gt_range"],
             base_fee=fee["base_fee"],
             incremental_fee_per_100_gt=fee["incremental_fee_per_100_gt"],

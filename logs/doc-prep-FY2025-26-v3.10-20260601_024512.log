@@ -1,0 +1,156 @@
+02:45:12  INFO      [DocPrepPipeline] log file → E:\app\code\ai\agentic-ai\marcura-port-call-tariff-agent\logs\doc-prep-FY2025-26-v3.10-20260601_024512.log
+02:45:12  INFO      Processing: Publisher-Tariff-Book-FY-2024-25.pdf  (from E:\app\code\ai\agentic-ai\marcura-port-call-tariff-agent\context-layer\rag\raw\south-africa)
+02:45:12  INFO      [DocPrepPipeline] parse  pdf=Publisher-Tariff-Book-FY-2024-25.pdf
+02:45:12  INFO      [ParserAgent] start  pdf=Publisher-Tariff-Book-FY-2024-25.pdf  pages=5–13  out=south-africa-tariff-book-FY2025-26-v3.10.md
+02:45:15  INFO      [ParserAgent] done   south-africa-tariff-book-FY2025-26-v3.10.md  (33,483 chars)
+02:45:15  INFO      [DocPrepPipeline] parse  done → south-africa-tariff-book-FY2025-26-v3.10.md
+02:45:15  INFO      TariffStore ready: E:\app\code\ai\agentic-ai\marcura-port-call-tariff-agent\context-layer\rag\db\south-africa-tariff-store-FY2025-26-v3.10.db
+02:45:15  INFO      [DocPrepPipeline] extract  md=south-africa-tariff-book-FY2025-26-v3.10.md  db=south-africa-tariff-store-FY2025-26-v3.10.db
+02:45:15  INFO      ============================================================
+02:45:15  INFO      [RuleExtractor] south-africa-tariff-book-FY2025-26-v3.10.md — 21 sections selected
+02:45:15  INFO      [SEND] 1.1 LIGHT DUES ON VESSELS  (646 chars)
+02:45:15  INFO      [SEND] 1.1.1 LIGHT DUES  (2013 chars)
+02:45:15  INFO      [SEND] 1.2 SAMSA LEVY  (363 chars)
+02:45:15  INFO      [SEND] 2.1 VTS CHARGES ON VESSELS  (479 chars)
+02:45:15  INFO      [SEND] 2.1.1 VTS CHARGES  (874 chars)
+02:45:15  INFO      [SEND] 3.1 GENERAL TERMS AND CONDITIONS  (1350 chars)
+02:45:15  INFO      [SEND] 3.2 MARINE SERVICES INCENTIVE  (910 chars)
+02:45:15  INFO      [SEND] 3.3 PILOTAGE SERVICES  (2000 chars)
+02:45:15  INFO      [SEND] 3.4 SURVEY/EXAMINATION OF SMALL VESSELS AND LIFE SAVING APPLIANCES  (174 chars)
+02:45:15  INFO      [SEND] 3.5 PILOTAGE EXEMPTION CERTIFICATE  (1166 chars)
+02:45:15  INFO      [SEND] 3.6 TUGS/VESSEL ASSISTANCE AND/OR ATTENDANCE  (2921 chars)
+02:45:15  INFO      [SEND] 3.7 MISCELLANEOUS TUG/VESSEL SERVICES  (3273 chars)
+02:45:15  INFO      [SEND] 3.8 BERTHING SERVICES  (1761 chars)
+02:45:15  INFO      [SEND] 3.9 RUNNING OF VESSEL LINES  (1665 chars)
+02:45:15  INFO      [SEND] 3.10 HIRE OF MARINE EQUIPMENT/MARINE SERVICES  (1328 chars)
+02:45:15  INFO      [SEND] 4.1 PORT FEES ON VESSELS  (326 chars)
+02:45:15  INFO      [SEND] 4.1.1 PORT DUES  (2943 chars)
+02:45:15  INFO      [SEND] 4.1.2 BERTH DUES  (3543 chars)
+02:45:15  INFO      [SEND] 4.2 PORT DUES FOR SMALL VESSELS, HULKS AND PLEASURE VESSELS  (2618 chars)
+02:45:15  INFO      [SEND] 4.3 MISCELLANEOUS SERVICES  (518 chars)
+02:45:15  INFO      [SEND] 4.3.1 FIRE AND EMERGENCY SERVICES  (1427 chars)
+02:45:15  INFO      ============================================================
+02:45:16  INFO      AFC is enabled with max remote calls: 10.
+02:45:19  INFO      HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent "HTTP/1.1 200 OK"
+02:45:19  INFO        [OK]   1.1 LIGHT DUES ON VESSELS: 0 item(s)
+02:45:25  INFO      AFC is enabled with max remote calls: 10.
+02:46:02  INFO      HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent "HTTP/1.1 200 OK"
+02:46:02  INFO        [OK]   1.1.1 LIGHT DUES: 3 item(s)
+02:46:08  INFO      AFC is enabled with max remote calls: 10.
+02:46:12  INFO      HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent "HTTP/1.1 200 OK"
+02:46:12  INFO        [OK]   1.2 SAMSA LEVY: 1 item(s)
+02:46:18  INFO      AFC is enabled with max remote calls: 10.
+02:46:20  INFO      HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent "HTTP/1.1 200 OK"
+02:46:20  INFO        [OK]   2.1 VTS CHARGES ON VESSELS: 0 item(s)
+02:46:25  INFO      AFC is enabled with max remote calls: 10.
+02:46:37  INFO      HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent "HTTP/1.1 200 OK"
+02:46:37  INFO        [OK]   2.1.1 VTS CHARGES: 3 item(s)
+02:46:42  INFO      AFC is enabled with max remote calls: 10.
+02:46:53  INFO      HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent "HTTP/1.1 200 OK"
+02:46:53  INFO        [OK]   3.1 GENERAL TERMS AND CONDITIONS: 2 item(s)
+02:46:59  INFO      AFC is enabled with max remote calls: 10.
+02:47:26  INFO      HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent "HTTP/1.1 200 OK"
+02:47:26  INFO        [OK]   3.2 MARINE SERVICES INCENTIVE: 10 item(s)
+02:47:31  INFO      AFC is enabled with max remote calls: 10.
+02:47:58  INFO      HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent "HTTP/1.1 200 OK"
+02:47:58  INFO        [OK]   3.3 PILOTAGE SERVICES: 8 item(s)
+02:48:04  INFO      AFC is enabled with max remote calls: 10.
+02:48:11  INFO      HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent "HTTP/1.1 200 OK"
+02:48:11  INFO        [OK]   3.4 SURVEY/EXAMINATION OF SMALL VESSELS AND : 2 item(s)
+02:48:17  INFO      AFC is enabled with max remote calls: 10.
+02:48:45  INFO      HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent "HTTP/1.1 200 OK"
+02:48:45  INFO        [OK]   3.5 PILOTAGE EXEMPTION CERTIFICATE: 4 item(s)
+02:48:51  INFO      AFC is enabled with max remote calls: 10.
+02:50:19  INFO      HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent "HTTP/1.1 200 OK"
+02:50:19  INFO        [OK]   3.6 TUGS/VESSEL ASSISTANCE AND/OR ATTENDANCE: 39 item(s)
+02:50:25  INFO      AFC is enabled with max remote calls: 10.
+02:51:13  INFO      HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent "HTTP/1.1 200 OK"
+02:51:14  INFO        [OK]   3.7 MISCELLANEOUS TUG/VESSEL SERVICES: 23 item(s)
+02:51:19  INFO      AFC is enabled with max remote calls: 10.
+02:51:46  INFO      HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent "HTTP/1.1 200 OK"
+02:51:46  INFO        [OK]   3.8 BERTHING SERVICES: 10 item(s)
+02:51:51  INFO      AFC is enabled with max remote calls: 10.
+02:52:25  INFO      HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent "HTTP/1.1 200 OK"
+02:52:25  INFO        [OK]   3.9 RUNNING OF VESSEL LINES: 22 item(s)
+02:52:30  INFO      AFC is enabled with max remote calls: 10.
+02:52:48  INFO      HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent "HTTP/1.1 200 OK"
+02:52:48  INFO        [OK]   3.10 HIRE OF MARINE EQUIPMENT/MARINE SERVICES: 9 item(s)
+02:52:53  INFO      AFC is enabled with max remote calls: 10.
+02:52:55  INFO      HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent "HTTP/1.1 200 OK"
+02:52:55  INFO        [OK]   4.1 PORT FEES ON VESSELS: 0 item(s)
+02:53:01  INFO      AFC is enabled with max remote calls: 10.
+02:53:46  INFO      HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent "HTTP/1.1 200 OK"
+02:53:46  INFO        [OK]   4.1.1 PORT DUES: 2 item(s)
+02:53:52  INFO      AFC is enabled with max remote calls: 10.
+02:54:48  INFO      HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent "HTTP/1.1 200 OK"
+02:54:48  INFO        [OK]   4.1.2 BERTH DUES: 6 item(s)
+02:54:53  INFO      AFC is enabled with max remote calls: 10.
+02:55:42  INFO      HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent "HTTP/1.1 200 OK"
+02:55:42  INFO        [OK]   4.2 PORT DUES FOR SMALL VESSELS, HULKS AND P: 15 item(s)
+02:55:47  INFO      AFC is enabled with max remote calls: 10.
+02:55:59  INFO      HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent "HTTP/1.1 200 OK"
+02:55:59  INFO        [OK]   4.3 MISCELLANEOUS SERVICES: 3 item(s)
+02:56:05  INFO      AFC is enabled with max remote calls: 10.
+02:56:30  INFO      HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent "HTTP/1.1 200 OK"
+02:56:30  INFO        [OK]   4.3.1 FIRE AND EMERGENCY SERVICES: 10 item(s)
+02:56:35  INFO      [RuleExtractor] complete  version=FY2025-26-v3.10  172 fee items  21 done  0 errors  0 skipped
+02:56:35  INFO      [DocPrepPipeline] extract  done — 172 fees  0 errors
+02:56:35  INFO      TariffStore ready: E:\app\code\ai\agentic-ai\marcura-port-call-tariff-agent\context-layer\rag\db\south-africa-tariff-store-FY2025-26-v3.10.db
+02:56:35  INFO      [DocPrepPipeline] validate  doc_id=0967183cb19d
+02:56:35  INFO      [ValidationAgent] 21 items queued for validation  doc_id=0967183cb19d
+02:56:35  INFO      AFC is enabled with max remote calls: 10.
+02:56:39  INFO      HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent "HTTP/1.1 200 OK"
+02:56:43  INFO      AFC is enabled with max remote calls: 10.
+02:56:46  INFO      HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent "HTTP/1.1 200 OK"
+02:56:50  INFO      AFC is enabled with max remote calls: 10.
+02:56:53  INFO      HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent "HTTP/1.1 200 OK"
+02:56:57  INFO      AFC is enabled with max remote calls: 10.
+02:57:00  INFO      HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent "HTTP/1.1 200 OK"
+02:57:00  WARNING   [ValidationAgent] ON_HOLD  section=3.1  item=FEES FOR USE OF APPLIANCES/EQUIPMENT AND SERVICES NOT PROVIDED FOR HEREIN  reason=The 'tariff_fee_item' 'FEES FOR USE OF APPLIANCES/EQUIPMENT AND SERVICES NOT PRO
+02:57:04  INFO      AFC is enabled with max remote calls: 10.
+02:57:07  INFO      HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent "HTTP/1.1 200 OK"
+02:57:07  WARNING   [ValidationAgent] ON_HOLD  section=3.1  item=HELICOPTER SERVICES FOR JOBS OF A SPECIAL NATURE  reason=The 'tariff_fee_item' 'HELICOPTER SERVICES FOR JOBS OF A SPECIAL NATURE' is not 
+02:57:11  INFO      AFC is enabled with max remote calls: 10.
+02:57:14  INFO      HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent "HTTP/1.1 200 OK"
+02:57:18  INFO      AFC is enabled with max remote calls: 10.
+02:57:21  INFO      HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent "HTTP/1.1 200 OK"
+02:57:24  INFO      AFC is enabled with max remote calls: 10.
+02:57:27  INFO      HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent "HTTP/1.1 200 OK"
+02:57:31  INFO      AFC is enabled with max remote calls: 10.
+02:57:34  INFO      HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent "HTTP/1.1 200 OK"
+02:57:37  INFO      AFC is enabled with max remote calls: 10.
+02:57:42  INFO      HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent "HTTP/1.1 200 OK"
+02:57:46  INFO      AFC is enabled with max remote calls: 10.
+02:57:51  INFO      HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent "HTTP/1.1 200 OK"
+02:57:51  WARNING   [ValidationAgent] ON_HOLD  section=3.3  item=PLO DUTIES FOR PILOTS ON BOARD TANKER VESSELS DURING STAY  reason=The 'tariff_fee_item' 'PLO DUTIES FOR PILOTS ON BOARD TANKER VESSELS DURING STAY
+02:57:55  INFO      AFC is enabled with max remote calls: 10.
+02:57:59  INFO      HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent "HTTP/1.1 200 OK"
+02:58:03  INFO      AFC is enabled with max remote calls: 10.
+02:58:07  INFO      HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent "HTTP/1.1 200 OK"
+02:58:10  INFO      AFC is enabled with max remote calls: 10.
+02:58:19  INFO      HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent "HTTP/1.1 200 OK"
+02:58:19  WARNING   [ValidationAgent] ON_HOLD  section=3.5  item=PILOTAGE EXEMPTION CERTIFICATE (PER METRE)  reason=The extracted record is missing key structured fee details such as the vessel GT
+02:58:22  INFO      AFC is enabled with max remote calls: 10.
+02:58:25  INFO      HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent "HTTP/1.1 200 OK"
+02:58:25  WARNING   [ValidationAgent] ON_HOLD  section=3.7  item=TUGS/VESSELS INVOLVED IN SALVAGE  reason=The 'tariff_fee_item' 'TUGS/VESSELS INVOLVED IN SALVAGE' is not derivable from t
+02:58:29  INFO      AFC is enabled with max remote calls: 10.
+02:58:42  INFO      HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent "HTTP/1.1 200 OK"
+02:58:42  WARNING   [ValidationAgent] ON_HOLD  section=4.1.1  item=PORT DUES - ENTRY AND DAILY FEE  reason=The extracted record is missing the key numeric values for the basic fee, daily 
+02:58:45  INFO      AFC is enabled with max remote calls: 10.
+02:58:48  INFO      HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent "HTTP/1.1 200 OK"
+02:58:48  WARNING   [ValidationAgent] ON_HOLD  section=4.1.2  item=BERTH DUES (ORE LOADING JETTY)  reason=The 'tariff_fee_item' includes '(ORE LOADING JETTY)' which is not mentioned in t
+02:58:52  INFO      AFC is enabled with max remote calls: 10.
+02:58:56  INFO      HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent "HTTP/1.1 200 OK"
+02:58:56  WARNING   [ValidationAgent] ON_HOLD  section=4.2  item=PORT DUES FOR HULKS  reason=The 'unmodeled_clauses' contain text that is not present in the provided source 
+02:59:00  INFO      AFC is enabled with max remote calls: 10.
+02:59:05  INFO      HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent "HTTP/1.1 200 OK"
+02:59:08  INFO      AFC is enabled with max remote calls: 10.
+02:59:12  INFO      HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent "HTTP/1.1 200 OK"
+02:59:16  INFO      AFC is enabled with max remote calls: 10.
+02:59:20  INFO      HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent "HTTP/1.1 200 OK"
+02:59:23  INFO      [ValidationAgent] 8 items written to validation_holds.json
+02:59:23  INFO      [ValidationAgent] complete  checked=21  passed=13  on_hold=8
+02:59:23  INFO      [DocPrepPipeline] validate  done — checked=21  on_hold=8
+02:59:23  INFO      [DocPrepPipeline] step log: parse: south-africa-tariff-book-FY2025-26-v3.10.md → extract: 172 fee items, 0 errors → validate: 21 checked, 8 on_hold
+02:59:23  INFO      Extraction: 172 fees, 0 errors
+02:59:23  INFO      Validation: 21 checked, 8 on_hold

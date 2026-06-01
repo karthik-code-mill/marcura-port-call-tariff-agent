@@ -1,4 +1,4 @@
-# Port Call Tariff Agent
+![Port Call Tariff Agent](docs/intro.png)
 
 ## What This Is
 
@@ -172,6 +172,15 @@ context-layer/rag/raw/{country_slug}/*.pdf
 
 ---
 
+## Architecture
+
+![Architecture Diagram](docs/architecture.svg)
+
+## Demo video
+### Extraction
+![Extraction demo](docs/demo1.mp4)
+### Execution
+![Execution demo](docs/demo2.mp4)
 ## Setup
 
 ### Requirements
@@ -298,7 +307,7 @@ On completion, the database is written to:
 context-layer/rag/db/south-africa-tariff-store-FY2025-26-v3.3.db
 ```
 
-The version is automatically marked active in `context-layer/config/app_config.json`.
+The version is automatically marked active in `config/app_config.json`.
 
 If the run is interrupted, re-running the same command resumes from the last completed section — already-processed sections are skipped.
 
@@ -364,16 +373,16 @@ Full API docs at `http://localhost:8000/docs` after starting the server.
 
 ## Project Structure
 
-The layout follows an **AI Harness** pattern: the `context-layer/` directory is the boundary between external data sources (PDFs, configs) and the agent system. Agents read from it and write to it. Nothing in `src/` reaches outside this boundary at runtime. This makes data provenance clear, inputs inspectable, and individual stages replaceable.
+The layout follows an **AI Harness** pattern: `context-layer/` holds all data artefacts the agents consume and produce (PDFs, Markdown, databases, chunks). `config/` sits at the project root — separate from `context-layer/` — because it is system-wide configuration, not country- or version-specific data. Both directories are the readable/writable boundary for all agents; nothing in `src/` reaches outside them at runtime.
 
 ```
 marcura-port-call-tariff-agent/
 │
-├── context-layer/                     ← AI Harness: all data consumed or produced by agents
-│   ├── config/
-│   │   ├── app_config.json            ← Active tariff version registry per country
-│   │   └── validation_holds.json      ← Fee items blocked by validation_agent
-│   │
+├── config/                            ← System-wide configuration (not country/version-specific)
+│   ├── app_config.json                ← Active tariff version registry per country
+│   └── validation_holds.json          ← Fee items blocked by validation_agent (written at runtime)
+│
+├── context-layer/                     ← AI Harness: all data artefacts consumed or produced by agents
 │   ├── rag/
 │   │   ├── raw/                       ← Input PDFs — one subdirectory per country, never modified
 │   │   │   └── south-africa/
@@ -476,7 +485,7 @@ The following require no manual steps once the pipeline is triggered:
 
 ### Multi-Country and Multi-Version
 
-Adding a new country or a new tariff year requires no code changes. The system reads from `context-layer/config/app_config.json`:
+Adding a new country or a new tariff year requires no code changes. The system reads from `config/app_config.json`:
 
 ```json
 {

@@ -68,7 +68,7 @@ _DEFAULT_COUNTRY = "South Africa"
 # Validation holds written by the Validation Agent during Stage 1.
 _HOLDS_PATH = (
     Path(__file__).resolve().parent.parent.parent
-    / "context-layer" / "config" / "validation_holds.json"
+    / "config" / "validation_holds.json"
 )
 
 

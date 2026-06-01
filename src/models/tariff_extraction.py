@@ -39,6 +39,16 @@ class TariffFeeItem(BaseModel):
     base_fee:                   float                = Field(default=0.0)
     incremental_fee_per_100_gt: float                = Field(default=0.0)
     formula:                    str                  = Field(default="")
+    port_condition:             str                  = Field(
+        default="",
+        description=(
+            "Verbatim port-related wording from the source document — the exact clause "
+            "that determined the port assignment. Stored for retriever context and audit. "
+            "Examples: 'Applicable to vessels at the Port of Durban', "
+            "'Durban | Richards Bay | Cape Town | Other'. Empty for fees with no "
+            "port-specific clause (port='All')."
+        ),
+    )
     conditions:                 List[str]            = Field(default_factory=list)
     surcharges:                 List[SurchargeItem]  = Field(default_factory=list)
     exceptions:                 List[ExceptionItem]  = Field(default_factory=list)

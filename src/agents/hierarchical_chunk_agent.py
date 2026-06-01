@@ -54,7 +54,8 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Dict, List, Optional, Tuple
 
-import google.generativeai as genai
+from google import genai
+from google.genai import types
 import pdfplumber
 from dotenv import load_dotenv
 from pydantic import BaseModel, Field
@@ -85,7 +86,7 @@ CHUNK_DIR.mkdir(parents=True, exist_ok=True)
 
 # ─── Gemini SDK Setup ─────────────────────────────────────────────────────────
 
-genai.configure(api_key=os.environ["GOOGLE_API_KEY"])
+_client = genai.Client(api_key=os.environ["GOOGLE_API_KEY"])
 
 _SYSTEM_PROMPT = """\
 You are a document structure analyst specialising in maritime port tariff documents.
@@ -144,12 +145,9 @@ EXTRACTION RULES
 8. Completeness      — every meaningful line of text must appear in exactly one chunk.
 """
 
-_model = genai.GenerativeModel(
-    model_name="gemini-2.5-flash",
+_CHUNK_MODEL  = "gemini-2.5-flash"
+_CHUNK_CONFIG = types.GenerateContentConfig(
     system_instruction=_SYSTEM_PROMPT,
-)
-
-_generation_config = genai.GenerationConfig(
     response_mime_type="application/json",
     temperature=0.0,
 )
@@ -469,7 +467,11 @@ def _extract_chunks(context: str, max_retries: int = 3) -> RawChunkPayload:
     )
     for attempt in range(max_retries):
         try:
-            response = _model.generate_content(prompt, generation_config=_generation_config)
+            response = _client.models.generate_content(
+                model=_CHUNK_MODEL,
+                config=_CHUNK_CONFIG,
+                contents=prompt,
+            )
             return RawChunkPayload.model_validate_json(response.text)
         except Exception as exc:
             if attempt == max_retries - 1:

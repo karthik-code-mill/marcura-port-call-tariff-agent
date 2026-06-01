@@ -68,6 +68,20 @@ _EVAL_GLOBALS: Dict[str, Any] = {
     "float":   float,
 }
 
+# Sentinel strings written by the extractor when a fee is determined by an
+# external authority (SAMSA levy, special pilotage, ad-hoc port authority
+# discretion). These must not be passed to eval() — they are markers, not
+# Python expressions. eval() with __builtins__=None raises TypeError on
+# unknown names rather than NameError, producing the misleading
+# "'NoneType' object is not subscriptable" error seen in formula failures.
+_SENTINEL_FORMULAS: frozenset = frozenset({
+    "EXTERNAL_DETERMINATION_REFERENCED_SKIP",
+    "EXTERNAL_RATE",
+    "EXTERNAL_DETERMINATION",
+    "TBD",
+    "N/A",
+})
+
 _calc_guardrail = CalculationGuardrail()
 _llm_guardrail  = LLMOutputGuardrail()
 
@@ -161,23 +175,45 @@ def _eval_formula(
     increment: float,
     lower_bound: float,
     upper_bound: float,
+    days_in_port: int = 1,
 ) -> float:
     if not formula:
         return base_fee
+
+    # Sentinel formulas mark fees determined by external authority (SAMSA levy,
+    # ad-hoc pilotage, etc.). They are not Python expressions — eval() would
+    # crash with "'NoneType' object is not subscriptable" because __builtins__
+    # is None and Python tries None["var_name"] on an unknown identifier.
+    # Return base_fee (0.0 for these rows) so the invoice captures them as
+    # ZAR 0 with unmodeled_clauses explaining the external determination.
+    if formula.strip() in _SENTINEL_FORMULAS:
+        return base_fee
+
+    duration_hours = days_in_port * 24
     locals_ns: Dict[str, Any] = {
         "GT": gt, "gt": gt,
         "base_fee": base_fee, "increment": increment,
+        "incremental_fee_per_100_gt": increment,
         "lower_bound": lower_bound, "upper_bound": upper_bound,
+        # Time-in-port — all alias names used by the extractor across tariff versions.
+        "days":              days_in_port,
+        "days_in_port":      days_in_port,
+        "duration_hours":    duration_hours,
+        "duration_in_hours": duration_hours,
+        "stay_hours":        duration_hours,
+        "hours":             duration_hours,
     }
     return float(eval(formula, _EVAL_GLOBALS, locals_ns))  # noqa: S307
 
 
 def _compute_line(fee: ApplicableFeeRecord, vessel: VesselInput) -> ComputedLineItem:
-    gt = vessel.gross_tonnage
+    gt           = vessel.gross_tonnage
+    days_in_port = getattr(vessel, "days_in_port", 1)
     formula_inputs = {
         "GT": gt, "base_fee": fee.base_fee,
         "increment": fee.incremental_fee_per_100_gt,
         "lower_bound": fee.gt_lower_bound, "upper_bound": fee.gt_upper_bound,
+        "days_in_port": days_in_port,
     }
 
     computation_error = ""
@@ -185,6 +221,7 @@ def _compute_line(fee: ApplicableFeeRecord, vessel: VesselInput) -> ComputedLine
         base_amount = _eval_formula(
             fee.formula, gt, fee.base_fee, fee.incremental_fee_per_100_gt,
             fee.gt_lower_bound, fee.gt_upper_bound,
+            days_in_port=days_in_port,
         )
     except Exception as exc:
         base_amount = fee.base_fee

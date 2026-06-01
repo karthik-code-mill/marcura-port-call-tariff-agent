@@ -38,7 +38,7 @@ BASE_DIR    = Path(__file__).resolve().parent.parent.parent
 RAW_DIR     = BASE_DIR / "context-layer" / "rag" / "raw"
 OUT_DIR     = BASE_DIR / "context-layer" / "rag" / "out"
 DB_DIR      = BASE_DIR / "context-layer" / "rag" / "db"
-CONFIG_PATH = BASE_DIR / "context-layer" / "config" / "app_config.json"
+CONFIG_PATH = BASE_DIR / "config" / "app_config.json"
 
 OUT_DIR.mkdir(parents=True, exist_ok=True)
 DB_DIR.mkdir(parents=True, exist_ok=True)
@@ -148,6 +148,7 @@ CREATE TABLE IF NOT EXISTS tariff_fee_items (
     base_fee                    REAL    DEFAULT 0,
     incremental_fee_per_100_gt  REAL    DEFAULT 0,
     formula                     TEXT    DEFAULT '',
+    port_condition              TEXT    DEFAULT '',
     conditions                  TEXT    DEFAULT '[]',
     surcharges                  TEXT    DEFAULT '[]',
     exceptions                  TEXT    DEFAULT '[]',
@@ -207,6 +208,14 @@ class TariffStore:
         self.conn.row_factory = sqlite3.Row
         self.conn.executescript(_SCHEMA_SQL)
         self.conn.commit()
+        # Migrate existing DBs — add port_condition if the column is absent.
+        # ALTER TABLE ADD COLUMN is idempotent via the except: existing DBs silently skip.
+        try:
+            self.conn.execute("ALTER TABLE tariff_fee_items ADD COLUMN port_condition TEXT DEFAULT ''")
+            self.conn.commit()
+            log.debug(f"TariffStore: migrated port_condition column in {db_path.name}")
+        except Exception:
+            pass  # column already present
         log.info(f"TariffStore ready: {db_path}")
 
     def upsert_fee_item(self, doc_id: str, country: str, currency: str, tariff_year: str, item: TariffFeeItem) -> None:
@@ -219,9 +228,9 @@ class TariffStore:
                  section, section_name, tariff_fee_item,
                  vessel_type, vessel_gt_range, gt_min, gt_max,
                  base_fee, incremental_fee_per_100_gt, formula,
-                 conditions, surcharges, exceptions, notes,
+                 port_condition, conditions, surcharges, exceptions, notes,
                  unmodeled_clauses, extraction_confidence, source_page, ingested_at)
-            VALUES (?,?,?,?,?, ?,?,?, ?,?,?,?, ?,?,?, ?,?,?,?, ?,?,?,?)
+            VALUES (?,?,?,?,?, ?,?,?, ?,?,?,?, ?,?,?, ?,?,?,?,?, ?,?,?,?)
             ON CONFLICT(doc_id, section, tariff_fee_item, vessel_type, vessel_gt_range)
             DO UPDATE SET
                 section_name               = excluded.section_name,
@@ -231,6 +240,7 @@ class TariffStore:
                 gt_min                     = excluded.gt_min,
                 gt_max                     = excluded.gt_max,
                 formula                    = excluded.formula,
+                port_condition             = excluded.port_condition,
                 conditions                 = excluded.conditions,
                 surcharges                 = excluded.surcharges,
                 exceptions                 = excluded.exceptions,
@@ -245,6 +255,7 @@ class TariffStore:
                 item.section, item.section_name, item.tariff_fee_item,
                 item.vessel_type, item.vessel_gt_range, gt_min, gt_max,
                 item.base_fee, item.incremental_fee_per_100_gt, item.formula,
+                item.port_condition,
                 json.dumps(item.conditions),
                 json.dumps([s.model_dump() for s in item.surcharges]),
                 json.dumps([e.model_dump() for e in item.exceptions]),

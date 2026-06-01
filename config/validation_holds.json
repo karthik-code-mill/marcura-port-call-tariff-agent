@@ -1,0 +1,108 @@
+{
+  "52b7d06580d0": {
+    "3.7__TANKER FIRE WATCH, FIRE FIGHTING AND STANDBY SERVICES": {
+      "reason": "The extracted 'tariff_fee_item' (TANKER FIRE WATCH, FIRE FIGHTING AND STANDBY SERVICES) is too specific and cannot be derived from the general source section heading 'MISCELLANEOUS TUG/VESSEL SERVICES'.",
+      "timestamp": "2026-05-31T18:08:58.408337+00:00",
+      "country": "South Africa",
+      "version": "FY2025-26-v3.6"
+    },
+    "3.7__TUGS/VESSELS INVOLVED IN SALVAGE": {
+      "reason": "The 'tariff_fee_item' 'TUGS/VESSELS INVOLVED IN SALVAGE' is not derivable from the provided source section heading 'MISCELLANEOUS TUG/VESSEL SERVICES', which is a general category.",
+      "timestamp": "2026-05-31T18:09:05.764832+00:00",
+      "country": "South Africa",
+      "version": "FY2025-26-v3.6"
+    },
+    "4.1.1__PORT DUES": {
+      "reason": "The extracted record is missing all key numeric values, including the basic fee, incremental fee, minimum fee, and various reductions and surcharges, which are clearly stated in the source section.",
+      "timestamp": "2026-05-31T18:09:13.540111+00:00",
+      "country": "South Africa",
+      "version": "FY2025-26-v3.6"
+    }
+  },
+  "0967183cb19d": {
+    "1.1.1__COASTER LIGHT DUES": {
+      "reason": "The extracted record for 'COASTER LIGHT DUES' is missing the associated fee amount (117.08 per 100 tons), which is derivable from the source text under 'All other vessels'.",
+      "timestamp": "2026-06-01T00:22:01.847425+00:00",
+      "country": "South Africa",
+      "version": "FY2025-26-v3.12"
+    },
+    "1.1.1__LIGHT DUES (LOA-BASED)": {
+      "reason": "The 'tariff_fee_item' includes '(LOA-BASED)', which is not present or derivable from the provided source section heading 'LIGHT DUES'.",
+      "timestamp": "2026-05-31T21:19:42.546047+00:00",
+      "country": "South Africa",
+      "version": "FY2025-26-v3.8"
+    },
+    "3.7__TUGS/VESSELS INVOLVED IN SALVAGE": {
+      "reason": "The 'tariff_fee_item' 'TUGS/VESSELS INVOLVED IN SALVAGE' is not derivable from the provided source section heading 'MISCELLANEOUS TUG/VESSEL SERVICES', which is a general category.",
+      "timestamp": "2026-05-31T22:58:25.949868+00:00",
+      "country": "South Africa",
+      "version": "FY2025-26-v3.10"
+    },
+    "3.10__EQUIPMENT REPAIR/REPLACEMENT": {
+      "reason": "The 'tariff_fee_item' 'EQUIPMENT REPAIR/REPLACEMENT' is not directly derivable from the source section heading 'HIRE OF MARINE EQUIPMENT/MARINE SERVICES'. It is found in a 'Note' within the section, describing a consequence rather than a primary hire item.",
+      "timestamp": "2026-05-31T21:20:30.452848+00:00",
+      "country": "South Africa",
+      "version": "FY2025-26-v3.8"
+    },
+    "3.3__PLO DUTIES FOR PILOTS ON BOARD TANKER VESSELS DURING STAY": {
+      "reason": "The 'tariff_fee_item' 'PLO DUTIES FOR PILOTS ON BOARD TANKER VESSELS DURING STAY' is not derivable from the source section, which details 'PILOTAGE SERVICES' for normal entry/exit and per 100 tons, and mentions other services are 'available on application' without specifying this particular item or 'tanker vessels'.",
+      "timestamp": "2026-05-31T22:57:51.854658+00:00",
+      "country": "South Africa",
+      "version": "FY2025-26-v3.10"
+    },
+    "3.6__TUGS/VESSEL ASSISTANCE AND/OR ATTENDANCE": {
+      "reason": "The 'unmodeled_clauses' field contains text that is not present in the provided source section, indicating invented content.",
+      "timestamp": "2026-05-31T21:21:31.343806+00:00",
+      "country": "South Africa",
+      "version": "FY2025-26-v3.8"
+    },
+    "3.7__TANKER FIRE WATCH, FIRE FIGHTING AND STANDBY SERVICES": {
+      "reason": "The extracted 'tariff_fee_item' (TANKER FIRE WATCH, FIRE FIGHTING AND STANDBY SERVICES) is too specific and not directly derivable from the general source section heading 'MISCELLANEOUS TUG/VESSEL SERVICES'.",
+      "timestamp": "2026-05-31T21:21:49.699870+00:00",
+      "country": "South Africa",
+      "version": "FY2025-26-v3.8"
+    },
+    "3.1__FEES FOR USE OF APPLIANCES/EQUIPMENT AND SERVICES NOT PROVIDED FOR HEREIN": {
+      "reason": "The 'tariff_fee_item' 'FEES FOR USE OF APPLIANCES/EQUIPMENT AND SERVICES NOT PROVIDED FOR HEREIN' is not derivable from the provided source section heading '3.1 GENERAL TERMS AND CONDITIONS'.",
+      "timestamp": "2026-05-31T22:57:00.776997+00:00",
+      "country": "South Africa",
+      "version": "FY2025-26-v3.10"
+    },
+    "3.1__HELICOPTER SERVICES FOR JOBS OF A SPECIAL NATURE": {
+      "reason": "The 'tariff_fee_item' 'HELICOPTER SERVICES FOR JOBS OF A SPECIAL NATURE' is not derivable from the source section heading '3.1 GENERAL TERMS AND CONDITIONS', which is a general section title.",
+      "timestamp": "2026-05-31T22:57:07.914780+00:00",
+      "country": "South Africa",
+      "version": "FY2025-26-v3.10"
+    },
+    "3.5__PILOTAGE EXEMPTION CERTIFICATE (PER METRE)": {
+      "reason": "The extracted record is missing key structured fee details such as the vessel GT range, formula rate, and minimum fee, which are clearly present in the source text for the specified tariff item. These details are incorrectly placed in the unmodeled_clauses field instead of the appropriate structured fields.",
+      "timestamp": "2026-05-31T22:58:19.189592+00:00",
+      "country": "South Africa",
+      "version": "FY2025-26-v3.10"
+    },
+    "4.1.1__PORT DUES - ENTRY AND DAILY FEE": {
+      "reason": "The extracted record is missing the key numeric values for the basic fee, daily rate, and minimum fee, which are clearly stated in the source section for 'PORT DUES - ENTRY AND DAILY FEE'.",
+      "timestamp": "2026-05-31T22:58:42.295413+00:00",
+      "country": "South Africa",
+      "version": "FY2025-26-v3.10"
+    },
+    "4.1.2__BERTH DUES (ORE LOADING JETTY)": {
+      "reason": "The 'tariff_fee_item' includes '(ORE LOADING JETTY)' which is not mentioned in the source section. Additionally, the content of 'unmodeled_clauses' is not present in the provided source text.",
+      "timestamp": "2026-05-31T22:58:48.628169+00:00",
+      "country": "South Africa",
+      "version": "FY2025-26-v3.10"
+    },
+    "4.2__PORT DUES FOR HULKS": {
+      "reason": "The 'unmodeled_clauses' contain text that is not present in the provided source section, indicating invented clauses.",
+      "timestamp": "2026-05-31T22:58:56.932664+00:00",
+      "country": "South Africa",
+      "version": "FY2025-26-v3.10"
+    },
+    "3.10__EQUIPMENT DAMAGE": {
+      "reason": "The 'tariff_fee_item' 'EQUIPMENT DAMAGE' is derived from a 'Note' within the section, not from the main section heading 'HIRE OF MARINE EQUIPMENT/MARINE SERVICES', which describes fees for hiring equipment and services.",
+      "timestamp": "2026-06-01T00:22:53.390229+00:00",
+      "country": "South Africa",
+      "version": "FY2025-26-v3.12"
+    }
+  }
+}

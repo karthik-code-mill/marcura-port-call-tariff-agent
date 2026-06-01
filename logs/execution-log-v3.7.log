@@ -1,0 +1,205 @@
+00:36:11  INFO      [RuleExtractor] complete  version=FY2025-26-v3.7  164 fee items  21 done  0 errors  0 skipped
+00:36:11  INFO      [DocPrepPipeline] extract  done — 164 fees  0 errors
+00:36:11  INFO      TariffStore ready: E:\app\code\ai\agentic-ai\marcura-port-call-tariff-agent\context-layer\rag\db\south-africa-tariff-store-FY2025-26-v3.7.db
+00:36:11  INFO      [DocPrepPipeline] validate  doc_id=0967183cb19d
+00:36:11  INFO      [ValidationAgent] 15 items queued for validation  doc_id=0967183cb19d
+00:36:11  INFO      AFC is enabled with max remote calls: 10.
+00:36:15  INFO      HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent "HTTP/1.1 200 OK"
+00:36:15  WARNING   [ValidationAgent] ON_HOLD  section=1.1.1  item=COASTER LIGHT DUES  reason=The extracted 'tariff_fee_item' includes 'COASTER', which is not present in the 
+00:36:18  INFO      AFC is enabled with max remote calls: 10.
+00:36:22  INFO      HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent "HTTP/1.1 200 OK"
+00:36:25  INFO      AFC is enabled with max remote calls: 10.
+00:36:37  INFO      HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent "HTTP/1.1 200 OK"
+00:36:37  WARNING   [ValidationAgent] ON_HOLD  section=1.1.1  item=LIGHT DUES (LOA-BASED)  reason=The 'tariff_fee_item' includes '(LOA-BASED)', which is not present or derivable 
+00:36:40  INFO      AFC is enabled with max remote calls: 10.
+00:36:45  INFO      HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent "HTTP/1.1 200 OK"
+00:36:48  INFO      AFC is enabled with max remote calls: 10.
+00:36:52  INFO      HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent "HTTP/1.1 200 OK"
+00:36:56  INFO      AFC is enabled with max remote calls: 10.
+00:37:00  INFO      HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent "HTTP/1.1 200 OK"
+00:37:03  INFO      AFC is enabled with max remote calls: 10.
+00:37:07  INFO      HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent "HTTP/1.1 200 OK"
+00:37:10  INFO      AFC is enabled with max remote calls: 10.
+00:37:15  INFO      HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent "HTTP/1.1 200 OK"
+00:37:18  INFO      AFC is enabled with max remote calls: 10.
+00:37:23  INFO      HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent "HTTP/1.1 200 OK"
+00:37:27  INFO      AFC is enabled with max remote calls: 10.
+00:37:31  INFO      HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent "HTTP/1.1 200 OK"
+00:37:34  INFO      AFC is enabled with max remote calls: 10.
+00:37:41  INFO      HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent "HTTP/1.1 200 OK"
+00:37:44  INFO      AFC is enabled with max remote calls: 10.
+00:37:49  INFO      HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent "HTTP/1.1 200 OK"
+00:37:52  INFO      AFC is enabled with max remote calls: 10.
+00:37:56  INFO      HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent "HTTP/1.1 200 OK"
+00:37:59  INFO      AFC is enabled with max remote calls: 10.
+00:38:04  INFO      HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent "HTTP/1.1 200 OK"
+00:38:07  INFO      AFC is enabled with max remote calls: 10.
+00:38:11  INFO      HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent "HTTP/1.1 200 OK"
+00:38:11  WARNING   [ValidationAgent] ON_HOLD  section=3.7  item=TUGS/VESSELS INVOLVED IN SALVAGE  reason=The 'tariff_fee_item' 'TUGS/VESSELS INVOLVED IN SALVAGE' is not derivable from t
+00:38:14  INFO      [ValidationAgent] 3 items written to validation_holds.json
+00:38:14  INFO      [ValidationAgent] complete  checked=15  passed=12  on_hold=3
+00:38:14  INFO      [DocPrepPipeline] validate  done — checked=15  on_hold=3
+00:38:14  INFO      [DocPrepPipeline] step log: parse: south-africa-tariff-book-FY2025-26-v3.7.md → extract: 164 fee items, 0 errors → validate: 15 checked, 3 on_hold
+00:38:14  INFO      Extraction: 164 fees, 0 errors
+00:38:14  INFO      Validation: 15 checked, 3 on_hold
+PS E:\app\code\ai\agentic-ai\marcura-port-call-tariff-agent\src> python -m orchestrator.pipeline --country "South Africa" --port Durban --gt 51300 --vessel-type "Bulk Carrier" --voyage inbound --after-hours --days-in-port 2
+<frozen runpy>:128: RuntimeWarning: 'orchestrator.pipeline' found in sys.modules after import of package 'orchestrator', but prior to execution of 'orchestrator.pipeline'; this may result in unpredictable behaviour
+00:39:48  INFO      TariffStore ready: E:\app\code\ai\agentic-ai\marcura-port-call-tariff-agent\context-layer\rag\db\south-africa-tariff-store-FY2025-26-v3.7.db
+00:39:48  INFO      [pipeline] retrieve  port=Durban  GT=51300.0
+00:39:48  INFO      [RetrieverAgent] port=Durban  GT=51300.0  voyage=inbound
+00:39:48  WARNING   [RetrievalGuardrail] REJECTED  section=1.1.1  item=LIGHT DUES (LOA-BASED)  confidence=0.00 < 0.2
+00:39:48  WARNING   [RetrievalGuardrail] REJECTED  section=1.1.1  item=COASTER LIGHT DUES  confidence=0.00 < 0.2
+00:39:48  WARNING   [RetrievalGuardrail] REJECTED  section=3.7  item=TUGS/VESSELS INVOLVED IN SALVAGE  confidence=0.00 < 0.2
+00:39:48  INFO      [RetrievalGuardrail] 54 passed, 3 rejected (confidence < 0.2)
+00:39:48  INFO      [RetrieverAgent] RetrievalGuardrail rejected 3 low-confidence candidates
+00:39:48  INFO      [metrics] guardrail_rejection  guardrail=retrieval_confidence  count=3  cumulative=3
+00:39:48  INFO      [metrics] retrieval_hit  port=Durban  candidates=54  held=0
+00:39:48  INFO      [RetrieverAgent] 54 candidates retrieved
+00:39:48  INFO      [RetrieverAgent] candidate 01  section=3.7  port=Durban  gt_range=0-999999999  fee_item=MOBILISATION AND DEMOBILISATION CHARGE FOR FLOATING CRANES  base_fee=44374.14  confidence=1.0
+00:39:48  INFO      [RetrieverAgent] candidate 02  section=3.7  port=Durban  gt_range=0-999999999  fee_item=FLOATING CRANES - HANDLING LOADS  base_fee=19017.5  confidence=1.0
+00:39:48  INFO      [RetrieverAgent] candidate 03  section=1.1.1  port=All  gt_range=0-999999999  fee_item=LIGHT DUES  base_fee=0.0  confidence=0.7
+00:39:48  INFO      [RetrieverAgent] candidate 04  section=1.2  port=All  gt_range=0-999999999  fee_item=SAMSA LEVY  base_fee=0.0  confidence=0.4
+00:39:48  INFO      [RetrieverAgent] candidate 05  section=3.10  port=All  gt_range=0-999999999  fee_item=PASSENGER GANGWAYS  base_fee=320.1  confidence=0.8
+00:39:48  INFO      [RetrieverAgent] candidate 06  section=3.10  port=All  gt_range=0-999999999  fee_item=PUNT HIRE  base_fee=146.27  confidence=0.8
+00:39:48  INFO      [RetrieverAgent] candidate 07  section=3.10  port=All  gt_range=0-999999999  fee_item=ELECTRIC POWER  base_fee=0.0  confidence=0.4
+00:39:48  INFO      [RetrieverAgent] candidate 08  section=3.10  port=All  gt_range=0-999999999  fee_item=COMPRESSED AIR  base_fee=0.0  confidence=0.4
+00:39:48  INFO      [RetrieverAgent] candidate 09  section=3.10  port=All  gt_range=0-999999999  fee_item=ANY OTHER EQUIPMENT  base_fee=0.0  confidence=0.4
+00:39:48  INFO      [RetrieverAgent] candidate 10  section=3.10  port=All  gt_range=0-999999999  fee_item=DIVERS SERVICES  base_fee=0.0  confidence=0.4
+00:39:48  INFO      [RetrieverAgent] candidate 11  section=3.10  port=All  gt_range=0-999999999  fee_item=EQUIPMENT REPAIR/REPLACEMENT  base_fee=0.0  confidence=0.4
+00:39:48  INFO      [RetrieverAgent] candidate 12  section=3.4  port=All  gt_range=0-999999999  fee_item=FEES FOR SURVEYING/EXAMINATION OF SMALL VESSELS  base_fee=1410.8  confidence=1.0
+00:39:48  INFO      [RetrieverAgent] candidate 13  section=3.4  port=All  gt_range=0-999999999  fee_item=FEES FOR SURVEYING/EXAMINATION OF LIFE SAVING APPLIANCES  base_fee=615.66  confidence=1.0
+00:39:48  INFO      [RetrieverAgent] candidate 14  section=3.5  port=All  gt_range=0-999999999  fee_item=PILOTAGE EXEMPTION CERTIFICATE (UP TO 30M LOA)  base_fee=0.0  confidence=0.4
+00:39:48  INFO      [RetrieverAgent] candidate 15  section=3.5  port=All  gt_range=0-999999999  fee_item=PILOTAGE EXEMPTION CERTIFICATE (OVER 30M UP TO 50M LOA)  base_fee=0.0  confidence=0.4
+00:39:48  INFO      [RetrieverAgent] candidate 16  section=3.5  port=All  gt_range=0-999999999  fee_item=PILOTAGE EXEMPTION CERTIFICATE (OVER 50M UP TO 70M LOA)  base_fee=0.0  confidence=0.4
+00:39:48  INFO      [RetrieverAgent] candidate 17  section=3.7  port=All  gt_range=0-999999999  fee_item=LARGE LAUNCH SERVICES  base_fee=3248.01  confidence=1.0
+00:39:48  INFO      [RetrieverAgent] candidate 18  section=3.7  port=All  gt_range=0-999999999  fee_item=SMALL LAUNCH SERVICES  base_fee=2273.62  confidence=1.0
+00:39:48  INFO      [RetrieverAgent] candidate 19  section=3.9  port=All  gt_range=0-999999999  fee_item=TUG/VESSEL STANDBY CANCELLATION FEE  base_fee=1654.56  confidence=0.8
+00:39:48  INFO      [RetrieverAgent] candidate 20  section=4.1.1  port=All  gt_range=0-999999999  fee_item=PORT DUES  base_fee=192.73  confidence=1.0
+00:39:48  INFO      [RetrieverAgent] candidate 21  section=4.1.2  port=All  gt_range=35301-53000  fee_item=BERTH DUES  base_fee=0.0  confidence=1.0
+00:39:48  INFO      [RetrieverAgent] candidate 22  section=4.1.2  port=All  gt_range=0-999999999  fee_item=FEE FOR NON SUBMISSION OF STATEMENT OF FACTS  base_fee=1926.96  confidence=1.0
+00:39:48  INFO      [RetrieverAgent] candidate 23  section=4.2  port=All  gt_range=0-999999999  fee_item=PORT DUES - SMALL VESSELS - NON-MECHANICALLY PROPELLED BOATS  base_fee=47.0  confidence=0.8
+00:39:48  INFO      [RetrieverAgent] candidate 24  section=4.2  port=All  gt_range=0-999999999  fee_item=PORT DUES - SMALL VESSELS - SELF-PROPELLED BOATS  base_fee=78.41  confidence=0.8
+00:39:48  INFO      [RetrieverAgent] candidate 25  section=4.2  port=All  gt_range=0-999999999  fee_item=PORT DUES - SMALL VESSELS - FISHING VESSELS (NON-STEEL HULLS) - FIRST 10 METRES  base_fee=189.37  confidence=0.8
+00:39:48  INFO      [RetrieverAgent] candidate 26  section=4.2  port=All  gt_range=0-999999999  fee_item=PORT DUES - SMALL VESSELS - FISHING VESSELS (NON-STEEL HULLS) - THEREAFTER  base_fee=378.68  confidence=0.8
+00:39:48  INFO      [RetrieverAgent] candidate 27  section=4.2  port=All  gt_range=0-999999999  fee_item=PORT DUES - SMALL VESSELS - FISHING VESSELS (STEEL HULLS) - FIRST 10 METRES  base_fee=382.31  confidence=0.8
+00:39:48  INFO      [RetrieverAgent] candidate 28  section=4.2  port=All  gt_range=0-999999999  fee_item=PORT DUES - SMALL VESSELS - FISHING VESSELS (STEEL HULLS) - THEREAFTER  base_fee=764.52  confidence=0.8
+00:39:48  INFO      [RetrieverAgent] candidate 29  section=4.2  port=All  gt_range=0-999999999  fee_item=PORT DUES - HULKS  base_fee=9.19  confidence=0.8
+00:39:48  INFO      [RetrieverAgent] candidate 30  section=4.2  port=All  gt_range=0-999999999  fee_item=PORT DUES - PLEASURE VESSELS - ROWING BOATS  base_fee=111.93  confidence=1.0
+00:39:48  INFO      [RetrieverAgent] candidate 31  section=4.2  port=All  gt_range=0-999999999  fee_item=PORT DUES - PLEASURE VESSELS - UP TO 6 METRES LOA  base_fee=223.88  confidence=1.0
+00:39:48  INFO      [RetrieverAgent] candidate 32  section=4.2  port=All  gt_range=0-999999999  fee_item=PORT DUES - PLEASURE VESSELS - OVER 6 METRES LOA  base_fee=447.71  confidence=1.0
+00:39:48  INFO      [RetrieverAgent] candidate 33  section=4.2  port=All  gt_range=0-999999999  fee_item=PORT DUES - VISITING VESSELS / YACHTS - DAYS 31-120  base_fee=2.82  confidence=0.8
+00:39:48  INFO      [RetrieverAgent] candidate 34  section=4.2  port=All  gt_range=0-999999999  fee_item=PORT DUES - VISITING VESSELS / YACHTS - DAYS 121-210  base_fee=5.56  confidence=0.8
+00:39:48  INFO      [RetrieverAgent] candidate 35  section=4.2  port=All  gt_range=0-999999999  fee_item=PORT DUES - VISITING VESSELS / YACHTS - DAYS 211-365  base_fee=11.14  confidence=0.8
+00:39:48  INFO      [RetrieverAgent] candidate 36  section=4.2  port=All  gt_range=0-999999999  fee_item=PORT DUES - VISITING VESSELS / YACHTS - OVER 12 MONTHS  base_fee=33.45  confidence=0.8
+00:39:48  INFO      [RetrieverAgent] candidate 37  section=4.3.1.1  port=All  gt_range=0-999999999  fee_item=FIRE TENDER TURN-OUT FEE — HEAVY DUTY (7 000 KG)  base_fee=3762.19  confidence=0.8
+00:39:48  INFO      [RetrieverAgent] candidate 38  section=4.3.1.10  port=All  gt_range=0-999999999  fee_item=USE OF ADDITIONAL BREATHING APPARATUS  base_fee=470.98  confidence=0.8
+00:39:48  INFO      [RetrieverAgent] candidate 39  section=4.3.1.2  port=All  gt_range=0-999999999  fee_item=FIRE TENDER TURN-OUT FEE — LIGHT DUTY  base_fee=2664.16  confidence=0.8
+00:39:48  INFO      [RetrieverAgent] candidate 40  section=4.3.1.3  port=All  gt_range=0-999999999  fee_item=HAZMAT (CHEMICAL) VEHICLE TURN-OUT — HEAVY DUTY (7 000 KG)  base_fee=3762.19  confidence=0.8
+00:39:48  INFO      [RetrieverAgent] candidate 41  section=4.3.1.4  port=All  gt_range=0-999999999  fee_item=HAZMAT (CHEMICAL) VEHICLE TURN-OUT — LIGHT DUTY  base_fee=2664.16  confidence=0.8
+00:39:48  INFO      [RetrieverAgent] candidate 42  section=4.3.1.5  port=All  gt_range=0-999999999  fee_item=USE OF THE FIRE TENDER, EQUIPMENT AND CREW  base_fee=1881.06  confidence=0.8
+00:39:48  INFO      [RetrieverAgent] candidate 43  section=4.3.1.6  port=All  gt_range=0-999999999  fee_item=USE OF HAZMAT VEHICLE, EQUIPMENT AND CREW  base_fee=1881.06  confidence=0.8
+00:39:48  INFO      [RetrieverAgent] candidate 44  section=4.3.1.7  port=All  gt_range=0-999999999  fee_item=ADDITIONAL FIRE FIGHTING STAFF FEE  base_fee=314.98  confidence=0.8
+00:39:48  INFO      [RetrieverAgent] candidate 45  section=4.3.1.8  port=All  gt_range=0-999999999  fee_item=FIRE FIGHTER ON STANDBY DUTY AT THE INCIDENT INCLUDING EQUIPMENT  base_fee=314.98  confidence=0.8
+00:39:48  INFO      [RetrieverAgent] candidate 46  section=4.3.1.9  port=All  gt_range=0-999999999  fee_item=USE OF PORTABLE FIRE PUMP, CHEMICAL TRANSFER PUMP, GENERATOR, “VELD FIRE” PUMP, BOBCAT INCLUDING FIRE FIGHTER TO OPERATE PUMP  base_fee=500.44  confidence=0.8
+00:39:48  INFO      [RetrieverAgent] candidate 47  section=2.1.1  port=Other  gt_range=0-999999999  fee_item=VTS CHARGES  base_fee=0.0  confidence=1.0
+00:39:48  INFO      [RetrieverAgent] candidate 48  section=3.6  port=Other  gt_range=0-999999999  fee_item=FEE FOR LATE ARRIVAL/DEPARTURE (PER TUG PER HALF HOUR)  base_fee=10152.19  confidence=1.0
+00:39:48  INFO      [RetrieverAgent] candidate 49  section=3.7  port=Other  gt_range=0-999999999  fee_item=TANKER FIRE WATCH, FIRE FIGHTING AND STANDBY SERVICES (FIRST 12 HOURS)  base_fee=20304.33  confidence=0.8
+00:39:48  INFO      [RetrieverAgent] candidate 50  section=3.7  port=Other  gt_range=0-999999999  fee_item=TANKER FIRE WATCH, FIRE FIGHTING AND STANDBY SERVICES (FOLLOWING 12 HOURS)  base_fee=13537.32  confidence=0.8
+00:39:48  INFO      [RetrieverAgent] candidate 51  section=3.7  port=Other  gt_range=0-999999999  fee_item=TANKER FIRE WATCH, FIRE FIGHTING AND STANDBY SERVICES (THEREAFTER)  base_fee=10152.19  confidence=0.8
+00:39:48  INFO      [RetrieverAgent] candidate 52  section=3.7  port=Other  gt_range=0-999999999  fee_item=LARGE TUG SERVICES  base_fee=20301.18  confidence=1.0
+00:39:48  INFO      [RetrieverAgent] candidate 53  section=3.7  port=Other  gt_range=0-999999999  fee_item=SMALL TUG/WORKBOAT SERVICES  base_fee=8159.07  confidence=1.0
+00:39:48  INFO      [RetrieverAgent] candidate 54  section=4.1.1  port=Other  gt_range=0-999999999  fee_item=MINIMUM PORT DUES  base_fee=470.98  confidence=1.0
+00:39:48  INFO      [RetrieverAgent] No chunk context — proceeding with structured data only
+00:39:48  INFO      AFC is enabled with max remote calls: 10.
+00:41:06  INFO      HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent "HTTP/1.1 200 OK"
+00:41:06  INFO      [RetrieverAgent] 4 applicable  50 skipped  4 flagged for review
+00:41:06  INFO      [pipeline] retrieve done — 4 applicable  50 skipped  4 flagged
+00:41:06  INFO      [pipeline] calculate  4 fees
+00:41:06  INFO      [CalculatorAgent] 4 fees  port=Durban  GT=51300.0
+00:41:06  INFO        1.1.1  LIGHT DUES                                base=   60,062.04  surcharge=      0.00  total=   60,062.04
+00:41:06  INFO        1.2  SAMSA LEVY                                base=        0.00  surcharge=      0.00  total=        0.00
+00:41:06  INFO        4.1.1  PORT DUES                                 base=  158,163.03  surcharge=      0.00  total=  158,163.03
+00:41:06  INFO        2.1.1  VTS CHARGES                               base=   33,345.00  surcharge=      0.00  total=   33,345.00
+00:41:06  INFO      AFC is enabled with max remote calls: 10.
+00:41:26  INFO      HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent "HTTP/1.1 200 OK"
+00:41:26  INFO      [CalculatorAgent] Invoice: 4 items  subtotal=251,570.07
+00:41:26  INFO      [pipeline] calculate done — 4 items  subtotal=251,570.07
+00:41:26  INFO      Step log: retrieve: 4 applicable, 50 skipped → calculate: 4 items  subtotal=251,570.07
+{
+  "port": "Durban",
+  "vessel_type": "Bulk Carrier",
+  "gross_tonnage": 51300.0,
+  "voyage_type": "inbound",
+  "currency": "ZAR",
+  "line_items": [
+    {
+      "section": "1.1.1",
+      "tariff_item": "LIGHT DUES",
+      "port": "All",
+      "gt_range": "0-999999999",
+      "base_amount": 60062.04,
+      "surcharge_amount": 0.0,
+      "total": 60062.04,
+      "formula_used": "117.08 * ceil(GT / 100)",
+      "active_surcharges": [],
+      "notes": "It would still be the vessel's prerogative to request for coastal status within the 60 day window.; Tariffs subject to VAT at 15%: Tariffs in South African Rand; Formula calculation (117.08 * ceil(51300 / 100) = 60062.04) validated. Unmodeled clause regarding coastal vessel status after 60 days exists, which could alter future charges. No applicable exceptions found for this vessel type.",
+      "source_page": 9,
+      "needs_human_review": true,
+      "review_reason": "Unmodeled clauses exist and an exception clause requires port-authority discretion (machine_handled=false). | Unmodeled clause present that could affect future charges."
+    },
+    {
+      "section": "1.2",
+      "tariff_item": "SAMSA LEVY",
+      "port": "All",
+      "gt_range": "0-999999999",
+      "base_amount": 0.0,
+      "surcharge_amount": 0.0,
+      "total": 0.0,
+      "formula_used": "base_fee=0.0",
+      "active_surcharges": [],
+      "notes": "Formula calculation (base_fee=0.0) validated to 0.0. However, an unmodeled clause states SAMSA levies are payable, suggesting the formula might be incomplete or the levy is calculated externally. This discrepancy warrants review.",
+      "source_page": 10,
+      "needs_human_review": true,
+      "review_reason": "Unmodeled clauses exist, extraction confidence is below 0.6, and an exception clause requires port-authority discretion (machine_handled=false). | Unmodeled clause indicates levy is payable, but formula computes 0.0. Potential anomaly or incomplete model."
+    },
+    {
+      "section": "4.1.1",
+      "tariff_item": "PORT DUES",
+      "port": "All",
+      "gt_range": "0-999999999",
+      "base_amount": 158163.03,
+      "surcharge_amount": 0.0,
+      "total": 158163.03,
+      "formula_used": "(base_fee * ceil(GT / 100)) + (incremental_fee_per_100_gt * ceil(GT / 100) * days_in_port)",
+      "active_surcharges": [],
+      "notes": "This reduction will not be enjoyed in addition to the 35% reduction granted for vessels not engaged in cargo working for the first 30 days only, bona fide coasters, passenger vessels and small vessels resorting under Section 4, Clause 4.2; Proof of aforementioned needs to be submitted to the Authority prior to Vessel sailing.; In the event of a coastal vessel entering from a foreign port full port dues would be payable at the first South African port of call.; Formula calculation ((192.73 * 513) + (57.79 * 513 * 2) = 98899.89 + 59263.14 = 158163.03) validated. Multiple exception clauses are present but do not appear to apply based on current vessel information (Bulk Carrier, not in ballast, 2 days in port). However, their 'machine_handled: false' status means a human should confirm non-applicability.",
+      "source_page": 21,
+      "needs_human_review": true,
+      "review_reason": "An exception clause requires port-authority discretion (machine_handled=false). | Multiple unhandled exception clauses exist; human review needed to confirm non-applicability."
+    },
+    {
+      "section": "2.1.1",
+      "tariff_item": "VTS CHARGES",
+      "port": "Other",
+      "gt_range": "0-999999999",
+      "base_amount": 33345.0,
+      "surcharge_amount": 0.0,
+      "total": 33345.0,
+      "formula_used": "0.65 * GT",
+      "active_surcharges": [],
+      "notes": "235.52; Formula calculation (0.65 * 51300 = 33345.0) validated. Note: The 'formula_inputs.increment' value (65.0) is inconsistent with the 'formula_used' rate (0.65), though the final computed amount is correct based on the 'formula_used' string. No applicable exceptions found for this vessel type.",
+      "source_page": 11,
+      "needs_human_review": true,
+      "review_reason": "An exception clause requires port-authority discretion (machine_handled=false). | Inconsistency between 'formula_used' rate and 'formula_inputs.increment' value."
+    }
+  ],
+  "subtotal": 251570.07,
+  "computation_notes": "The invoice includes four line items. Light Dues and Port Dues calculations were validated, but both have unmodeled clauses or unhandled exceptions that warrant human review. The SAMSA Levy computes to zero, but an unmodeled clause suggests it should be payable, indicating a potential modeling gap. VTS Charges calculation was validated, but an inconsistency was noted between the formula's rate and the provided input increment. All line items are flagged for human review due to these findings.",
+  "human_review_items": [
+    "LIGHT DUES",
+    "SAMSA LEVY",
+    "PORT DUES",
+    "VTS CHARGES"
+  ],
+  "retriever_skipped_fees": 50
+}

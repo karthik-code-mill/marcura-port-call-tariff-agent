@@ -1,11 +1,38 @@
 # ADR - Archietcural Decision Record
 
+## 0 Why this approach of RAG but Non traditional
+
+Typically RAG would be first choice to go with for this automated tariff calculator, but the traditional rag would not work because it shoudl be a case where LLm is provided with additional snippet of context to reason better. But here the need is deterministic extraction of the tariffs from the contract and apply then autonously for an incoming vessel.
+
+Approach was to go for Heirarchial structured meta data based RAG.
+Heirarchial - because the nature of the domain tariff fee is into sections, sub sections. Context should be entire sectio or subsection area. Chunking would make incomplete context.
+Structured - The data has the similiarity across the extraction. port, fee, exceptions, surcharges. But with also parts of free textual knowledges to be reasoned.
+Meta Data - this will help to categorically retrive and keep the travesal deterministic & context engineered.
+
+Could also go for page index & lllm tree RAG - This approach works when we are searching for determined context, but in this solution we have traverse and find match for all the section applicable better suited for metadata based.
+
+Cautious design to use first extraction and then use extracted data as RAG for tariff computation for a give vessel. This way need not reason every single time of teh transaction.
+
+### Design evolutions are
+
+1) Extract PDF page by page with previous & next page limited cache into Structured Meta data RAG & another hierarchical data store
+
+2) Extract PDF into MD. Then parse using MD's Heirarchial data for traversal for each section or subsection (inteligently) to LLM to extract tariffs. Extracted tariffs are coverted to heirarchial metadata based structured RAG.
+
+3) Removed flitz used for additional heirarchial and started using Markdown's heirarachial info with parsing with inteligence.
+
+4) Added agenic validation flow & AI Harness to control edge scenarrios
+
+5) Tabular data extraction id impacted due to format discrepancies in the contract. Added 2 layer processing 
+i) inteligent parser of the table clearing descrepancies
+ii) Added injection of a parsed table form md to json Array for making LLm to be able to extract more precisely
+
 ## 1 Framework
-For the Execution stage the agent framework choosen is Lang graph,
+For the implementation the agent framework choosen is Lang graph,
 Other consideration of a simple python based steps executor will save langgraph overheads. But i wanted to add on HITL for future roadmap.
 It might look overkill for the flows specially data prep but as the  project evolves from assignment to full context this could be more appropirate(open for modifications). But defintely good to have a reassessment.
 
-Other considerations - simple phyton based steps
+Other considerations - simple python based steps ( Not choosen)
 # orchestrator/document_prep_pipeline.py — no LangGraph needed
 
 def run_document_prep_pipeline(pdf_path, country, version_tag, ...) -> DocPrepResult:
@@ -145,7 +172,7 @@ No agent code (`retriever_agent`, `calculator_agent`, `rule_extractor_agent`, `v
 
 ## Considered
 Heirarchial paged Index
-he problem is that most tariff PDFs are not authored like books:
+the problem is that most tariff PDFs are not authored like books:
 
 TOC may be missing entirely
 headings are visually obvious but not semantically tagged

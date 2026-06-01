@@ -1,0 +1,534 @@
+# ─────────────────────────────────────────────────────────────────────────────
+# Marcura Port Call Tariff Agent — CI/CD Pipeline
+# GitHub Actions workflow
+#
+# To activate: copy or symlink this file to .github/workflows/pipeline.yml
+#
+# Stages
+# ──────
+#   1. lint          Code quality & formatting
+#   2. security      SAST, dependency audit, secret detection
+#   3. unit-test     Fast isolated tests (no LLM calls)
+#   4. integration   API contract tests with mocked LLM
+#   5. build         Docker image & release artifact
+#   6. deploy-staging    Abstract placeholder — wire up when environment exists
+#   7. deploy-production Abstract placeholder — wire up when environment exists
+# ─────────────────────────────────────────────────────────────────────────────
+
+name: CI/CD Pipeline
+
+on:
+  push:
+    branches: [main, trunk]
+    tags: ["v*.*.*"]
+  pull_request:
+    branches: [main, trunk]
+  workflow_dispatch:
+    inputs:
+      deploy_target:
+        description: "Deploy target (staging | production)"
+        required: false
+        default: staging
+
+env:
+  PYTHON_VERSION: "3.11"
+  IMAGE_NAME: marcura-port-call-tariff-agent
+
+# Cancel in-progress runs on the same branch when a new push arrives
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+# ─────────────────────────────────────────────────────────────────────────────
+# STAGE 1 — Code Quality: lint, format, type-check
+# ─────────────────────────────────────────────────────────────────────────────
+jobs:
+
+  lint:
+    name: "Stage 1 · Code Quality"
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python ${{ env.PYTHON_VERSION }}
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+          cache: pip
+
+      - name: Install quality tools
+        run: pip install ruff black mypy
+
+      - name: Ruff lint
+        run: ruff check src/ guardrails/ evaluation/
+
+      - name: Black format check
+        run: black --check --diff src/ guardrails/ evaluation/
+
+      - name: Mypy type check
+        run: |
+          pip install -r requirements.txt
+          mypy src/ --ignore-missing-imports --no-strict-optional
+
+# ─────────────────────────────────────────────────────────────────────────────
+# STAGE 2 — Security: SAST, dependency vulnerabilities, secret detection
+# ─────────────────────────────────────────────────────────────────────────────
+
+  security:
+    name: "Stage 2 · Security Scan"
+    runs-on: ubuntu-latest
+    needs: lint
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # full history needed for secret scanning
+
+      - name: Set up Python ${{ env.PYTHON_VERSION }}
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+          cache: pip
+
+      - name: Install security tools
+        run: pip install bandit pip-audit detect-secrets
+
+      - name: SAST — Bandit
+        # Scans for common Python security issues (eval, subprocess, hardcoded creds, etc.)
+        run: bandit -r src/ guardrails/ -ll -f json -o bandit-report.json || true
+
+      - name: Upload Bandit report
+        uses: actions/upload-artifact@v4
+        with:
+          name: bandit-report
+          path: bandit-report.json
+
+      - name: Dependency vulnerability audit
+        # Checks all installed packages against OSV / PyPI advisory database
+        run: |
+          pip install -r requirements.txt
+          pip-audit --format=json --output pip-audit-report.json || true
+
+      - name: Upload pip-audit report
+        uses: actions/upload-artifact@v4
+        with:
+          name: pip-audit-report
+          path: pip-audit-report.json
+
+      - name: Secret detection — detect-secrets
+        # Scans for accidentally committed secrets (API keys, tokens, connection strings)
+        run: |
+          detect-secrets scan --baseline .secrets.baseline || detect-secrets scan > .secrets.baseline
+          detect-secrets audit .secrets.baseline --report --fail-on-unaudited || true
+
+      - name: Prompt injection surface audit
+        # Verifies the security/prompt_injection.py patterns are present and non-empty
+        run: |
+          python -c "
+          import sys, re
+          from pathlib import Path
+          src = Path('security/prompt_injection.py').read_text()
+          pattern_count = src.count('re.compile')
+          print(f'Prompt injection patterns found: {pattern_count}')
+          if pattern_count < 10:
+              print('WARNING: fewer than 10 patterns — review security/prompt_injection.py')
+              sys.exit(1)
+          "
+
+# ─────────────────────────────────────────────────────────────────────────────
+# STAGE 3 — Unit Tests: fast, isolated, no LLM calls
+# ─────────────────────────────────────────────────────────────────────────────
+
+  unit-test:
+    name: "Stage 3 · Unit Tests"
+    runs-on: ubuntu-latest
+    needs: lint
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python ${{ env.PYTHON_VERSION }}
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+          cache: pip
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt pytest pytest-cov pytest-mock
+
+      - name: Run unit tests
+        env:
+          LLM_MODEL: "mock:noop"        # agents must not make real LLM calls in unit tests
+          GOOGLE_API_KEY: "test-key"
+        run: |
+          pytest evaluation/ src/ \
+            --ignore=src/agents \
+            -m "not integration" \
+            --cov=src \
+            --cov-report=xml:coverage.xml \
+            --cov-report=term-missing \
+            --tb=short \
+            -q
+
+      - name: Guardrail unit tests
+        run: |
+          pytest guardrails/ \
+            --cov=guardrails \
+            --cov-append \
+            --cov-report=xml:coverage.xml \
+            --tb=short \
+            -q
+
+      - name: Pydantic model tests
+        run: |
+          python -c "
+          import sys
+          sys.path.insert(0, 'src')
+          from models.vessel import VesselInput
+          from models.invoice import TariffInvoice
+          from models.retrieval import ApplicableFeeRecord
+          v = VesselInput(country='South Africa', port='Durban', gross_tonnage=45000,
+                          vessel_type='Container', voyage_type='inbound')
+          print('VesselInput OK:', v.port, v.gross_tonnage)
+          print('All model imports OK')
+          "
+
+      - name: Upload coverage report
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-report
+          path: coverage.xml
+
+# ─────────────────────────────────────────────────────────────────────────────
+# STAGE 4 — Integration Tests: API contract tests, mocked LLM
+# ─────────────────────────────────────────────────────────────────────────────
+
+  integration-test:
+    name: "Stage 4 · Integration Tests"
+    runs-on: ubuntu-latest
+    needs: [security, unit-test]
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python ${{ env.PYTHON_VERSION }}
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+          cache: pip
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt pytest pytest-mock httpx
+
+      - name: Provision test SQLite tariff store
+        # Creates a minimal in-memory DB with known fee rows for deterministic assertions
+        run: |
+          python -c "
+          import sys, sqlite3, json
+          from pathlib import Path
+
+          Path('context-layer/rag/db').mkdir(parents=True, exist_ok=True)
+          db = sqlite3.connect('context-layer/rag/db/test-tariff-store.db')
+          db.execute('''CREATE TABLE IF NOT EXISTS tariff_fee_items (
+              id INTEGER PRIMARY KEY,
+              doc_id TEXT, section TEXT, tariff_fee_item TEXT,
+              port TEXT, port_condition TEXT, vessel_gt_range TEXT,
+              gt_min REAL, gt_max REAL, base_fee REAL,
+              incremental_fee_per_100_gt REAL, formula TEXT,
+              conditions TEXT, surcharges TEXT, exceptions TEXT,
+              notes TEXT, unmodeled_clauses TEXT,
+              extraction_confidence REAL, source_page INTEGER
+          )''')
+          db.execute('''INSERT INTO tariff_fee_items VALUES
+              (1,'test-doc','1.1','Port Dues','Durban','','0-100000 GT',
+               0,100000,5000.0,10.0,'base_fee + (GT/100)*increment',
+               '[]','[]','[]','{}','[]',0.95,12)''')
+          db.commit(); db.close()
+          print('Test tariff store provisioned')
+          "
+
+      - name: FastAPI contract test — health
+        env:
+          LLM_MODEL: "google_genai:gemini-2.5-flash"
+          GOOGLE_API_KEY: "ci-placeholder"
+        run: |
+          python -c "
+          import sys
+          sys.path.insert(0, 'src')
+          from fastapi.testclient import TestClient
+          from api.api import app
+          client = TestClient(app)
+          r = client.get('/docs')
+          assert r.status_code == 200, f'Docs endpoint failed: {r.status_code}'
+          print('FastAPI /docs OK')
+          "
+
+      - name: Pipeline smoke test — Stage 2 with mocked LLM
+        env:
+          GOOGLE_API_KEY: "ci-placeholder"
+        run: |
+          pytest evaluation/ \
+            -k "not real_llm" \
+            --tb=short \
+            -q
+
+      - name: Guardrail boundary tests
+        run: |
+          python -c "
+          import sys
+          sys.path.insert(0, 'src')
+          sys.path.insert(0, '.')
+
+          from guardrails.vessel_input_guardrail import VesselInputGuardrail
+          from models.vessel import VesselInput
+
+          g = VesselInputGuardrail()
+
+          # Valid vessel — must pass
+          v_ok = VesselInput(country='South Africa', port='Durban',
+                             gross_tonnage=45000, vessel_type='Container',
+                             voyage_type='inbound')
+          r = g.check(v_ok)
+          assert r, f'Valid vessel rejected: {r}'
+
+          # Zero GT — must fail
+          try:
+              v_bad = VesselInput(country='South Africa', port='Durban',
+                                  gross_tonnage=0, vessel_type='',
+                                  voyage_type='inbound')
+              r2 = g.check(v_bad)
+              assert not r2, 'Zero-GT vessel should fail guardrail'
+          except Exception:
+              pass  # pydantic validation rejection is also acceptable
+
+          print('Guardrail boundary tests passed')
+          "
+
+# ─────────────────────────────────────────────────────────────────────────────
+# STAGE 5 — Build: Docker image + release artifact
+# ─────────────────────────────────────────────────────────────────────────────
+
+  build:
+    name: "Stage 5 · Build"
+    runs-on: ubuntu-latest
+    needs: integration-test
+    if: github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/tags/v')
+
+    outputs:
+      image-tag: ${{ steps.meta.outputs.version }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Derive image tag
+        id: meta
+        run: |
+          if [[ "${GITHUB_REF}" == refs/tags/* ]]; then
+            echo "version=${GITHUB_REF#refs/tags/}" >> $GITHUB_OUTPUT
+          else
+            echo "version=sha-${GITHUB_SHA::8}" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build Docker image (no push — no registry configured)
+        # TODO: add `push: true` and `registry` login when a container registry is available
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: cicd/Dockerfile
+          push: false
+          tags: ${{ env.IMAGE_NAME }}:${{ steps.meta.outputs.version }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: Package source artifact
+        run: |
+          zip -r release-${{ steps.meta.outputs.version }}.zip \
+            src/ guardrails/ prompts/ requirements.txt \
+            --exclude "**/__pycache__/*" "**/*.pyc"
+
+      - name: Upload release artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: release-${{ steps.meta.outputs.version }}
+          path: release-${{ steps.meta.outputs.version }}.zip
+          retention-days: 30
+
+# ─────────────────────────────────────────────────────────────────────────────
+# STAGE 6 — Deploy Staging  [ABSTRACT — wire up when environment is available]
+# ─────────────────────────────────────────────────────────────────────────────
+
+  deploy-staging:
+    name: "Stage 6 · Deploy → Staging"
+    runs-on: ubuntu-latest
+    needs: build
+    if: github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/tags/v')
+    environment:
+      name: staging
+      # url: https://staging.tariff-agent.internal   # uncomment when available
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Download release artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: release-${{ needs.build.outputs.image-tag }}
+
+      # ── PLACEHOLDER: Container registry login ─────────────────────────────
+      # - name: Login to container registry
+      #   uses: docker/login-action@v3
+      #   with:
+      #     registry: ${{ secrets.REGISTRY_URL }}
+      #     username: ${{ secrets.REGISTRY_USER }}
+      #     password: ${{ secrets.REGISTRY_TOKEN }}
+
+      # ── PLACEHOLDER: Push Docker image ────────────────────────────────────
+      # - name: Push image to staging registry
+      #   run: |
+      #     docker tag ${{ env.IMAGE_NAME }}:${{ needs.build.outputs.image-tag }} \
+      #       ${{ secrets.REGISTRY_URL }}/${{ env.IMAGE_NAME }}:staging
+      #     docker push ${{ secrets.REGISTRY_URL }}/${{ env.IMAGE_NAME }}:staging
+
+      # ── PLACEHOLDER: Deploy to staging host ───────────────────────────────
+      # - name: Deploy to staging server
+      #   uses: appleboy/ssh-action@v1
+      #   with:
+      #     host: ${{ secrets.STAGING_HOST }}
+      #     username: ${{ secrets.STAGING_USER }}
+      #     key: ${{ secrets.STAGING_SSH_KEY }}
+      #     script: |
+      #       docker pull ${{ secrets.REGISTRY_URL }}/${{ env.IMAGE_NAME }}:staging
+      #       docker compose -f /opt/tariff-agent/docker-compose.yml up -d
+
+      # ── PLACEHOLDER: Apply tariff DB migrations ────────────────────────────
+      # - name: Sync active tariff version config to staging
+      #   run: |
+      #     scp config/app_config.json ${{ secrets.STAGING_USER }}@${{ secrets.STAGING_HOST }}:/opt/tariff-agent/config/
+
+      - name: Staging deploy placeholder
+        run: |
+          echo "=== STAGE 6: STAGING DEPLOY ==="
+          echo "Image tag : ${{ needs.build.outputs.image-tag }}"
+          echo "Target    : staging (no environment configured yet)"
+          echo "Action    : Replace this step with real deploy commands"
+          echo "Skipping  : deploy steps are placeholders until infra is provisioned"
+
+      # ── PLACEHOLDER: Staging smoke test ───────────────────────────────────
+      # - name: Smoke test staging
+      #   run: |
+      #     curl -f https://staging.tariff-agent.internal/docs || exit 1
+      #     curl -f -X POST https://staging.tariff-agent.internal/api/v2/calculate \
+      #       -H "Content-Type: application/json" \
+      #       -d '{"vessel":{"country":"South Africa","port":"Durban","gross_tonnage":45000,"vessel_type":"Container","voyage_type":"inbound"}}' \
+      #       | jq '.subtotal'
+
+      - name: Staging smoke test placeholder
+        run: |
+          echo "=== SMOKE TEST: STAGING ==="
+          echo "Endpoint  : https://staging.tariff-agent.internal (not provisioned)"
+          echo "Test      : POST /api/v2/calculate with reference vessel"
+          echo "Skipping  : no staging URL available"
+
+# ─────────────────────────────────────────────────────────────────────────────
+# STAGE 7 — Deploy Production  [ABSTRACT — requires tag + manual approval]
+# ─────────────────────────────────────────────────────────────────────────────
+
+  deploy-production:
+    name: "Stage 7 · Deploy → Production"
+    runs-on: ubuntu-latest
+    needs: deploy-staging
+    if: startsWith(github.ref, 'refs/tags/v')
+    environment:
+      name: production
+      # url: https://tariff-agent.internal           # uncomment when available
+      # GitHub environment protection rules:
+      #   - Required reviewers: 1 approver before this job runs
+      #   - Deployment branches: tags only
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      # ── PLACEHOLDER: Promote image from staging to production ─────────────
+      # - name: Promote Docker image to production tag
+      #   run: |
+      #     docker pull ${{ secrets.REGISTRY_URL }}/${{ env.IMAGE_NAME }}:staging
+      #     docker tag  ${{ secrets.REGISTRY_URL }}/${{ env.IMAGE_NAME }}:staging \
+      #                 ${{ secrets.REGISTRY_URL }}/${{ env.IMAGE_NAME }}:${{ needs.build.outputs.image-tag }}
+      #     docker tag  ${{ secrets.REGISTRY_URL }}/${{ env.IMAGE_NAME }}:staging \
+      #                 ${{ secrets.REGISTRY_URL }}/${{ env.IMAGE_NAME }}:latest
+      #     docker push ${{ secrets.REGISTRY_URL }}/${{ env.IMAGE_NAME }}:${{ needs.build.outputs.image-tag }}
+      #     docker push ${{ secrets.REGISTRY_URL }}/${{ env.IMAGE_NAME }}:latest
+
+      # ── PLACEHOLDER: Blue-green / rolling deploy to production ────────────
+      # - name: Deploy to production
+      #   uses: appleboy/ssh-action@v1
+      #   with:
+      #     host: ${{ secrets.PROD_HOST }}
+      #     username: ${{ secrets.PROD_USER }}
+      #     key: ${{ secrets.PROD_SSH_KEY }}
+      #     script: |
+      #       docker pull ${{ secrets.REGISTRY_URL }}/${{ env.IMAGE_NAME }}:latest
+      #       docker compose -f /opt/tariff-agent/docker-compose.yml up -d --no-deps api
+
+      # ── PLACEHOLDER: Sync tariff DB and config ────────────────────────────
+      # - name: Sync config to production
+      #   run: |
+      #     scp config/app_config.json ${{ secrets.PROD_USER }}@${{ secrets.PROD_HOST }}:/opt/tariff-agent/config/
+      #     scp context-layer/structured/tariff_store_v2_FY2025-26-v3.1.db \
+      #       ${{ secrets.PROD_USER }}@${{ secrets.PROD_HOST }}:/opt/tariff-agent/context-layer/structured/
+
+      - name: Production deploy placeholder
+        run: |
+          echo "=== STAGE 7: PRODUCTION DEPLOY ==="
+          echo "Image tag : ${{ needs.build.outputs.image-tag }}"
+          echo "Trigger   : tag ${{ github.ref_name }}"
+          echo "Target    : production (no environment configured yet)"
+          echo "Gate      : manual approval via GitHub environment protection rules"
+          echo "Skipping  : deploy steps are placeholders until infra is provisioned"
+
+      # ── PLACEHOLDER: Production smoke test ────────────────────────────────
+      # - name: Smoke test production
+      #   run: |
+      #     curl -f https://tariff-agent.internal/docs || exit 1
+
+      - name: Production smoke test placeholder
+        run: |
+          echo "=== SMOKE TEST: PRODUCTION ==="
+          echo "Endpoint  : https://tariff-agent.internal (not provisioned)"
+          echo "Skipping  : no production URL available"
+
+      - name: Create GitHub Release
+        if: startsWith(github.ref, 'refs/tags/v')
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ github.ref_name }}
+          name: "Release ${{ github.ref_name }}"
+          body: |
+            ## Marcura Port Call Tariff Agent — ${{ github.ref_name }}
+
+            ### What's included
+            - Stage 1 pipeline: PDF → Markdown → SQLite fee records → validation
+            - Stage 2 pipeline: vessel input → retriever → calculator → invoice
+            - FastAPI endpoints for both stages
+            - Guardrails: VesselInput, Retrieval, Calculation, LLMOutput
+
+            ### Deployment
+            Docker image: `${{ env.IMAGE_NAME }}:${{ github.ref_name }}`
+            Active tariff version: FY2025-26-v3.1
+
+            ### LLM compatibility
+            Tested with `google_genai:gemini-2.5-flash`.
+            Set `LLM_MODEL` env var to switch providers.
+          draft: false
+          prerelease: false

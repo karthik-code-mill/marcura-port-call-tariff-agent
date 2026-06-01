@@ -17,13 +17,16 @@ The section you receive may be organised in one of two ways:
 
 **Type A — Section owns fee data directly**
 The section heading is immediately followed by fee tables or rate text (before any sub-heading).
+Clearly distinguish if the text is indicating direct fee rate usuallly with numbers or if its only a context(to be skipped) to coming rates 
 → Extract all fee items from the section's direct content.
 → Also extract fee items from any sub-sections present in the same block.
 
 **Type B — Section delegates to sub-sections**
-The section heading is followed only by introductory prose; the actual fee tables appear inside named sub-sections (##, ###, …).
-→ Extract fee items per sub-section.
+The section heading is followed only by introductory prose; the actual fee tables or fee text appear inside named sub-sections (##, ###, …).
+→ Extract fee items per sub-section by distinguishing the fee rate usually with numbers very clearly from other writtings.
 → Use the sub-section's number and heading for the `section` and `section_name` fields of each item.
+→ if its table, properly scan the table data from markdown, extract each combination as a single fee item. Dont miss any combinations.
+→ In table numbers could be with space(e.g: 32 877 -> 32877)
 
 <!--**Multiple conditional rules**
 A single fee line item often has multiple conditions that determine which rate applies — e.g., one rate for vessels ≤ 5 000 GT and another for > 5 000 GT, or one rate at port A and another at port B, or one rate for bulk carriers and another for tankers.
@@ -60,42 +63,24 @@ A single fee line item often has multiple conditions that determine which rate a
 
 10. **Confidence** — `1.0` = explicit · `0.8` = one ambiguous field · `0.6` = context-inferred · `0.4` = fee/conditions unclear · `0.0–0.2` = unreliable → human review. Notes content does NOT lower confidence.
 
-11. **Port names** — If a fee/rule applies to a single named port:
-    → use that port name.
-    Example:
-    "At the Port of Durban"
-    → port = "Durban"
-    If a fee/rule applies to all ports or no port restriction is stated:
-    → port = "All"
-    If wording uses exclusions:
-    Example:
-    "All ports excluding Durban and Saldanha"
-    → port = "Other"
-    Preserve the full sentence in conditions[].
-    If a fee/rule applies to more than one specific dports:
-    → create one record per port.
-    Example:
-    Port Elizabeth / Ngqura
-    → emit:
-    port="Elizabeth"
-    port="Ngqura"
-    If a table contains separate values for different ports:
-    → create one record per port - CRITICAL.
-    Example:
-    Richards Bay | Durban | Cape Town | Other
-    → emit:
-    port="Richards Bay"
-    port="Durban"
-    port="Cape Town"
-    port="Other"
-    If a surcharge or condition applies only to a specific port:
-    → use that port name.
-    Example:
-    "A surcharge of 50% applies only at the Port of Durban"
-    → port = "Durban"
-    If a sentence lists ports but does not provide different fees per port:
-    → port = "All"
-    Preserve the sentence in conditions[].
+11. **Port names**
+    - follow the addon conditional rules to help extract port correctly
+    If a fee have no mention of port: -> port ="All"
+    Example:"Basic fee per 100 tons or part" → port = "All"
+    If a sentence has the word ports but does not provide different fees per port: → port = "All"
+    Example:"fee for the ports is" → port = "All"
+    If a fee/rule applies to all ports: → port = "All"
+    Example:"for all port the fee is" → port = "All"
+    If a fee/rule applies to a single named port: → use that port name.
+    Example:"At the Port of Durban" → port = "Durban"    
+    If wording uses exclusions: → port = "Other"
+    Example:"All ports excluding Durban and Saldanha" → port = "Other"    
+    If a fee/rule applies to more than one specificed ports: → create fee item per port.
+    Example:"Port Elizabeth / Ngqura" → emit 2 fee items with port="Elizabeth" & port="Ngqura" 
+    If a table contains separate values for different ports: → create one record per port - CRITICAL. Dont missing any combination in the table.
+    Example:"Richards Bay | Durban | Cape Town | Other" → emit 4 fee items with each port (port="Richards Bay" & port="Durban" & port="Cape Town" & port="Other")
+    - follow the below
+    Preserve the port related wordings prefixed with port-data: in to the conditions[] field for storage.
     Never invent port names.
     Never convert "Other" to "All".
     Only use "Other" when the document explicitly represents remaining, unlisted, or excluded ports.

@@ -1,0 +1,11 @@
+03:46:45  INFO      [DocPrepPipeline] log file → E:\app\code\ai\agentic-ai\marcura-port-call-tariff-agent\logs\doc-prep-FY2025-26-v3.11-20260601_034645.log
+03:46:45  INFO      Processing: Publisher-Tariff-Book-FY-2024-25.pdf  (from E:\app\code\ai\agentic-ai\marcura-port-call-tariff-agent\context-layer\rag\raw\south-africa)
+03:46:45  INFO      [DocPrepPipeline] parse  pdf=Publisher-Tariff-Book-FY-2024-25.pdf
+03:46:45  INFO      [ParserAgent] start  pdf=Publisher-Tariff-Book-FY-2024-25.pdf  pages=5–13  out=south-africa-tariff-book-FY2025-26-v3.11.md
+03:46:48  INFO      [ParserAgent] done   south-africa-tariff-book-FY2025-26-v3.11.md  (33,483 chars)
+03:46:48  INFO      [DocPrepPipeline] parse  done → south-africa-tariff-book-FY2025-26-v3.11.md
+03:46:48  INFO      [DocPrepPipeline] parse-only  md=south-africa-tariff-book-FY2025-26-v3.11.md
+03:46:48  INFO      [RuleExtractor] enhanced MD → south-africa-tariff-book-FY2025-26-v3.11-enhanced.md
+03:46:48  INFO      [DocPrepPipeline] parse-only: enhanced MD written → south-africa-tariff-book-FY2025-26-v3.11-enhanced.md
+03:46:48  INFO      [DocPrepPipeline] validate: skipped (parse-only mode)
+03:46:48  INFO      [DocPrepPipeline] step log: parse: south-africa-tariff-book-FY2025-26-v3.11.md → parse-only: enhanced MD written → south-africa-tariff-book-FY2025-26-v3.11-enhanced.md → validate: skipped (parse-only mode)

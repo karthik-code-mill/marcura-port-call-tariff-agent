@@ -1,0 +1,156 @@
+%%{ init: { "theme": "default", "flowchart": { "curve": "basis", "htmlLabels": true } } }%%
+flowchart TB
+
+    %% ── External ──────────────────────────────────────────────────────────────
+    CLIENT(["REST Client<br/>curl · Postman · UI"])
+
+    %% ── API Layer ─────────────────────────────────────────────────────────────
+    subgraph API_LAYER["⚡ FastAPI Layer — src/api/api.py   (uvicorn :8000)"]
+        direction LR
+        S1_EP["<b>Stage 1 Endpoints</b><br/>POST /api/v1/prepare<br/>GET  /api/v1/status/:id<br/>GET  /api/v1/holds · /fees<br/>GET  /api/v1/versions<br/>POST /api/v1/versions/activate"]
+        S2_EP["<b>Stage 2 Endpoints</b><br/>POST /api/v2/calculate<br/>GET  /api/v1/metrics"]
+    end
+
+    %% ── Stage 1 — Document Preparation ───────────────────────────────────────
+    subgraph STAGE1["📄 Stage 1 — Document Preparation Pipeline   (LangGraph: START → parse → extract → validate → END)"]
+        direction LR
+
+        PARSE["<b>parser_agent</b><br/>─────────────────────<br/>PDF → Markdown<br/>pymupdf4llm + fitz<br/>Page-range slicing"]
+
+        EXTRACT["<b>rule_extractor_agent</b><br/>─────────────────────<br/>Markdown → SQLite fee records<br/>LLM section-by-section extraction<br/>Gemini structured output<br/>Formula · GT-band · surcharges"]
+
+        VALIDATE["<b>validation_agent</b><br/>─────────────────────<br/>Cross-check DB vs Markdown<br/>LLM spot-audit per section<br/>Writes validation_holds.json<br/>Flags low-confidence records"]
+
+        PARSE --> EXTRACT --> VALIDATE
+    end
+
+    %% ── Stage 2 — Tariff Execution ────────────────────────────────────────────
+    subgraph STAGE2["⚙️  Stage 2 — Tariff Execution Pipeline   (LangGraph: START → retrieve → calculate → END)"]
+        direction LR
+
+        RETRIEVE["<b>retriever_agent</b><br/>─────────────────────<br/>① VesselInputGuardrail<br/>② SQL metadata retrieval<br/>   (port + GT-band · vectorless RAG)<br/>③ Validation holds filter<br/>④ LLM applicability evaluation<br/>⑤ RetrievalGuardrail (confidence)"]
+
+        CALC["<b>calculator_agent</b><br/>─────────────────────<br/>① Deterministic formula eval<br/>   (sandboxed Python eval)<br/>② CalculationGuardrail<br/>   (reject negative / extreme)<br/>③ LLM audit pass<br/>   (structured AuditResponse)<br/>④ Invoice assembly"]
+
+        RETRIEVE -->|"ApplicableFeeRecord list"| CALC
+    end
+
+    %% ── Data Layer ────────────────────────────────────────────────────────────
+    subgraph DATA["🗄️  Data Layer — context-layer/"]
+        direction TB
+        PDF_RAW["📂 Raw PDF<br/>rag/raw/&lt;country&gt;/"]
+        MD_OUT["📝 Processed Markdown<br/>rag/out/"]
+        TARIFF_DB[("🗃️  TariffStore  (SQLite)<br/>tariff_store_v2_FY2025-26-v3.1.db<br/>table: tariff_fee_items<br/>port · section · GT-band · formula<br/>surcharges · conditions · confidence")]
+        HOLDS["📋 validation_holds.json<br/>On-hold fee records<br/>(blocked from retrieval)"]
+        APP_CFG["⚙️  app_config.json<br/>Active version per country"]
+    end
+
+    %% ── Shared Foundation ─────────────────────────────────────────────────────
+    subgraph FOUNDATION["🏗️  Shared Foundation — agents/document_preparation_agent.py"]
+        direction LR
+        TARIFF_STORE_CLS["TariffStore class<br/>SQLite persistence layer<br/>shared by all agents"]
+        PATH_HELPERS["Path helpers<br/>db_path_for_version<br/>md_path_for · raw_dir_for"]
+        VERSION_MGR["Version manager<br/>save/load_active_version<br/>list_available_versions"]
+    end
+
+    %% ── LLM Provider ──────────────────────────────────────────────────────────
+    subgraph LLM_LAYER["🤖 LLM Provider   (LLM_MODEL env var — swap without code change)"]
+        direction LR
+        GEMINI["Google Gemini<br/>gemini-2.5-flash<br/>(default)"]
+        OAI["OpenAI<br/>GPT-4o"]
+        ANT["Anthropic<br/>Claude Sonnet"]
+    end
+
+    %% ── Guardrails ────────────────────────────────────────────────────────────
+    subgraph GUARDRAILS["🛡️  Guardrails — guardrails/"]
+        direction LR
+        GR1["VesselInputGuardrail<br/>validate vessel payload<br/>before any DB work"]
+        GR2["RetrievalGuardrail<br/>confidence threshold filter<br/>drops low-fidelity candidates"]
+        GR3["CalculationGuardrail<br/>reject negative / extreme<br/>amounts per line item"]
+        GR4["LLMOutputGuardrail<br/>validate structured output<br/>schema + value constraints"]
+    end
+
+    %% ── Monitoring ────────────────────────────────────────────────────────────
+    subgraph MONITORING["📊 Monitoring — src/monitoring/"]
+        direction LR
+        TELEM["OpenTelemetry Tracer<br/>ConsoleSpanExporter<br/>→ Azure Monitor (planned)<br/>Per-span: port · GT · attempts"]
+        BIZ["Business Metrics<br/>retrieval hits · misses<br/>guardrail rejections<br/>calculation errors"]
+    end
+
+    %% ── Data Models ───────────────────────────────────────────────────────────
+    subgraph MODELS["📐 Pydantic Data Models — src/models/"]
+        direction LR
+        M1["VesselInput<br/>port · GT · voyage<br/>after_hours · in_ballast"]
+        M2["ApplicableFeeRecord<br/>RetrieverOutput<br/>FeeApplicabilityVerdict"]
+        M3["TariffInvoice<br/>TariffLineItem<br/>ComputedLineItem"]
+        M4["AuditResponse<br/>AuditVerdict"]
+        M5["TariffPipelineConfig<br/>DocumentPrepState<br/>TariffPipelineState"]
+    end
+
+    %% ── Versioned System Prompts ──────────────────────────────────────────────
+    subgraph PROMPTS["📜 Versioned System Prompts — prompts/"]
+        direction LR
+        SP_DOC17["document_preparation<br/>_agent_sp_v1.7"]
+        SP_DOC18["document_preparation<br/>_agent_sp_v1.8"]
+        SP_DOC19["document_preparation<br/>_agent_sp_v1.9"]
+        SP_DOC20["document_preparation<br/>_agent_sp_v2.0"]
+        SP_EXT["rule_extractor<br/>_agent_sp_v3.0"]
+        SP_VAL["validation<br/>_agent_sp_v3.0"]
+        SP_RET["retriever<br/>_agent_sp_v3.0"]
+        SP_CALC["calculator<br/>_agent_sp_v3.0"]
+    end
+
+    %% ═══════════════════════════════════════════════════════════════════════════
+    %% Connections
+    %% ═══════════════════════════════════════════════════════════════════════════
+
+    CLIENT --> S1_EP & S2_EP
+
+    S1_EP -->|"async background task"| STAGE1
+    S2_EP -->|"VesselInput"| STAGE2
+
+    %% Stage 1 data flow
+    PDF_RAW -->|"PDF bytes"| PARSE
+    PARSE -->|"Markdown file"| MD_OUT
+    MD_OUT -->|"section text"| EXTRACT
+    EXTRACT -->|"fee records INSERT"| TARIFF_DB
+    VALIDATE -->|"flag on-hold items"| HOLDS
+    VALIDATE -->|"update confidence scores"| TARIFF_DB
+
+    STAGE1 --- FOUNDATION
+
+    %% Stage 2 data flow
+    TARIFF_DB -->|"candidate fee rows (SQL)"| RETRIEVE
+    HOLDS     -->|"blocked item list"| RETRIEVE
+    APP_CFG   -->|"active version tag"| RETRIEVE
+
+    CALC -->|"TariffInvoice"| S2_EP
+
+    %% LLM usage
+    EXTRACT  -->|"structured extraction"| LLM_LAYER
+    VALIDATE -->|"cross-check audit"| LLM_LAYER
+    RETRIEVE -->|"applicability eval"| LLM_LAYER
+    CALC     -->|"audit pass"| LLM_LAYER
+
+    %% Guardrails usage
+    RETRIEVE -->|"uses"| GR1 & GR2 & GR4
+    CALC     -->|"uses"| GR3 & GR4
+
+    %% Monitoring usage
+    RETRIEVE -->|"OTel spans + metrics"| MONITORING
+    CALC     -->|"OTel spans + metrics"| MONITORING
+
+    %% Models
+    STAGE2 --- MODELS
+    STAGE1 --- MODELS
+
+    %% Prompts wiring
+    EXTRACT  -->|"loads at startup"| SP_EXT
+    VALIDATE -->|"loads at startup"| SP_VAL
+    RETRIEVE -->|"loads at startup"| SP_RET
+    CALC     -->|"loads at startup"| SP_CALC
+    PARSE    -->|"active version"| SP_DOC17 & SP_DOC18 & SP_DOC19 & SP_DOC20
+
+    %% Foundation backing stores
+    FOUNDATION --- TARIFF_DB
+    FOUNDATION --- APP_CFG

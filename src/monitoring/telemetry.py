@@ -1,17 +1,13 @@
 """
 OpenTelemetry setup for the Tariff Pipeline.
 
-Current exporter: ConsoleSpanExporter (stdout) — suitable for local development.
+Default: no-op (spans are recorded but not exported).
+Set OTEL_TRACE_CONSOLE=1 to print JSON spans to stdout for local debugging.
 
 TODO(azure-monitor): To ship traces to Azure Application Insights:
   1. pip install azure-monitor-opentelemetry-exporter
   2. Set env var: APPLICATIONINSIGHTS_CONNECTION_STRING=<your connection string>
-  3. Replace ConsoleSpanExporter with:
-       from azure.monitor.opentelemetry.exporter import AzureMonitorTraceExporter
-       exporter = AzureMonitorTraceExporter(
-           connection_string=os.environ["APPLICATIONINSIGHTS_CONNECTION_STRING"]
-       )
-  4. Optionally add AzureMonitorMetricExporter for metrics.
+  3. Add AzureMonitorTraceExporter inside setup_telemetry (see comment below).
 
 TODO(azure-insights): For distributed tracing across services (e.g. API → pipeline → agents):
   - Add OTLP exporter alongside Azure Monitor so local Jaeger/Zipkin can also receive spans.
@@ -30,14 +26,16 @@ def setup_telemetry(service_name: str) -> trace.Tracer:
     """
     Initialise the global TracerProvider (idempotent — safe to call multiple times).
     Returns a named tracer for the given service.
+
+    Console JSON export is OFF by default — set OTEL_TRACE_CONSOLE=1 to enable.
     """
     global _provider
     if _provider is None:
         _provider = TracerProvider()
 
-        # ── Console exporter (default) ────────────────────────────────────────
-        console_exporter = ConsoleSpanExporter()
-        _provider.add_span_processor(BatchSpanProcessor(console_exporter))
+        # ── Console exporter — opt-in only, avoids flooding tqdm output ───────
+        if os.getenv("OTEL_TRACE_CONSOLE", "").strip() == "1":
+            _provider.add_span_processor(BatchSpanProcessor(ConsoleSpanExporter()))
 
         # TODO(azure-monitor): add Azure Monitor exporter here (see module docstring)
 

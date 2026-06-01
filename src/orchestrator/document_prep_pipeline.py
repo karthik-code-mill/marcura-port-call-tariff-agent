@@ -46,7 +46,7 @@ from agents.document_preparation_agent import (
     save_active_version,
 )
 from agents.parser_agent import ParserError
-from agents.rule_extractor_agent import ExtractionError
+from agents.rule_extractor_agent import ExtractionError, prepare_markdown
 from models.document import ExtractionSummary, ValidationSummary
 from orchestrator.document_prep_state import DocumentPrepState
 
@@ -96,6 +96,18 @@ def _node_extract(state: DocumentPrepState) -> dict:
         log.warning(f"[DocPrepPipeline] {msg}")
         return {"errors": [msg], "step_log": [msg]}
 
+    # ── parse-only mode: run parser intelligence steps, skip LLM ─────────────
+    if state.get("parse_only"):
+        log.info(f"[DocPrepPipeline] parse-only  md={md_path.name}")
+        try:
+            _, enhanced_path = prepare_markdown(md_path)
+            msg = f"parse-only: enhanced MD written → {enhanced_path.name}"
+            log.info(f"[DocPrepPipeline] {msg}")
+            return {"md_path": enhanced_path, "step_log": [msg]}
+        except Exception as exc:
+            log.error(f"[DocPrepPipeline] parse-only FAILED: {exc}", exc_info=True)
+            return {"errors": [f"parse-only: {exc}"], "step_log": ["parse-only: FAILED"]}
+
     pdf_path    = state.get("pdf_path") or md_path
     tariff_year = _tariff_year_from_name(pdf_path.name if hasattr(pdf_path, "name") else str(pdf_path))
     db_path     = db_path_for_version(state["country"], state["version_tag"])
@@ -116,7 +128,11 @@ def _node_extract(state: DocumentPrepState) -> dict:
             f"[DocPrepPipeline] extract  done — "
             f"{summary.fee_items_written} fees  {summary.errors} errors"
         )
+        # prepare_markdown deleted the raw file and wrote *-enhanced.md;
+        # update md_path so _node_validate reads the enhanced file.
+        enhanced_path = md_path.with_name(md_path.stem + "-enhanced.md")
         return {
+            "md_path":            enhanced_path if enhanced_path.exists() else md_path,
             "extraction_summary": summary,
             "step_log": [f"extract: {summary.fee_items_written} fee items, {summary.errors} errors"],
         }
@@ -131,6 +147,11 @@ def _node_extract(state: DocumentPrepState) -> dict:
 
 
 def _node_validate(state: DocumentPrepState) -> dict:
+    if state.get("parse_only"):
+        msg = "validate: skipped (parse-only mode)"
+        log.info(f"[DocPrepPipeline] {msg}")
+        return {"step_log": [msg]}
+
     md_path = state.get("md_path")
     doc_id  = state.get("doc_id")
 
@@ -191,6 +212,7 @@ def run_document_prep_pipeline(
     skip_parse: bool = False,
     md_path: Optional[Path] = None,
     delete_after_parse: bool = False,
+    parse_only: bool = False,
 ) -> DocumentPrepState:
     """Build, run, and return the final state. Used by API and CLI."""
     pipeline = build_document_prep_pipeline()
@@ -203,7 +225,8 @@ def run_document_prep_pipeline(
         "two_column_layout":  two_column_layout,
         "skip_parse":         skip_parse,
         "delete_after_parse": delete_after_parse,
-        "md_path":            md_path,         # pre-set when skip_parse=True
+        "parse_only":         parse_only,
+        "md_path":            md_path,
         "doc_id":             None,
         "extraction_summary": None,
         "validation_summary": None,
@@ -229,14 +252,10 @@ def run_document_prep_pipeline(
 
 if __name__ == "__main__":
     import argparse
+    from datetime import datetime
     from dotenv import load_dotenv
 
     load_dotenv()
-    logging.basicConfig(
-        level=logging.INFO,
-        format="%(asctime)s  %(levelname)-8s  %(message)s",
-        datefmt="%H:%M:%S",
-    )
 
     from agents.document_preparation_agent import RAW_DIR, raw_dir_for
 
@@ -252,7 +271,31 @@ if __name__ == "__main__":
                         help="Existing Markdown file. Required when --skip-parse is set.")
     parser.add_argument("--delete-after-parse",  action="store_true", default=False,
                         help="Delete the source PDF after Markdown is successfully written.")
+    parser.add_argument("--parse-only",           action="store_true", default=False,
+                        help="Run parser intelligence steps only (normalize, expand rows, inject TABLE_JSON). "
+                             "Writes *-enhanced.md and stops — no LLM calls, no DB writes.")
     args = parser.parse_args()
+
+    # ── File + console logging ────────────────────────────────────────────────
+    _LOG_DIR = Path(__file__).resolve().parent.parent.parent / "logs"
+    _LOG_DIR.mkdir(exist_ok=True)
+    _ts       = datetime.now().strftime("%Y%m%d_%H%M%S")
+    _log_file = _LOG_DIR / f"doc-prep-{args.version_tag}-{_ts}.log"
+    _fmt      = "%(asctime)s  %(levelname)-8s  %(message)s"
+    logging.basicConfig(
+        level=logging.INFO,
+        format=_fmt,
+        datefmt="%H:%M:%S",
+        handlers=[
+            logging.StreamHandler(),
+            logging.FileHandler(str(_log_file), encoding="utf-8"),
+        ],
+    )
+    log.info(f"[DocPrepPipeline] log file → {_log_file}")
+
+    if args.parse_only and not args.skip_parse and not args.md_path:
+        # parse-only without an existing MD still needs a PDF → run parse node first
+        pass  # handled normally below; parse node runs, then extract short-circuits
 
     if args.skip_parse:
         if not args.md_path:
@@ -281,6 +324,7 @@ if __name__ == "__main__":
         skip_parse=args.skip_parse,
         md_path=args.md_path,
         delete_after_parse=args.delete_after_parse,
+        parse_only=args.parse_only,
     )
 
     ext = final_state.get("extraction_summary")

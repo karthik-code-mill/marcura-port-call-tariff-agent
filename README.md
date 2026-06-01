@@ -178,9 +178,9 @@ context-layer/rag/raw/{country_slug}/*.pdf
 
 ## Demo video
 ### Extraction
-![Extraction demo](docs/demo1.mp4)
+![Extraction demo](docs/demo1.gif)
 ### Execution
-![Execution demo](docs/demo2.mp4)
+![Execution demo](docs/demo2.gif)
 ## Setup
 
 ### Requirements

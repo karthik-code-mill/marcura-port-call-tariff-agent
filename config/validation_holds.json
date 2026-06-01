@@ -100,9 +100,15 @@
     },
     "3.10__EQUIPMENT DAMAGE": {
       "reason": "The 'tariff_fee_item' 'EQUIPMENT DAMAGE' is derived from a 'Note' within the section, not from the main section heading 'HIRE OF MARINE EQUIPMENT/MARINE SERVICES', which describes fees for hiring equipment and services.",
-      "timestamp": "2026-06-01T00:22:53.390229+00:00",
+      "timestamp": "2026-06-01T01:56:46.760588+00:00",
       "country": "South Africa",
-      "version": "FY2025-26-v3.12"
+      "version": "FY2025-26-v3.14"
+    },
+    "1.1.1__LIGHT DUES - PER 100 GT": {
+      "reason": "The extracted record identifies a specific tariff item (\"LIGHT DUES - PER 100 GT\") but omits the corresponding base fee of 117.08, which is clearly stated in the source text for 'Per 100 tons or part thereof'.",
+      "timestamp": "2026-06-01T01:55:20.825354+00:00",
+      "country": "South Africa",
+      "version": "FY2025-26-v3.14"
     }
   }
 }

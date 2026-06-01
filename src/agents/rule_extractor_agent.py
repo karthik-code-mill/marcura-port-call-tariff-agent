@@ -102,13 +102,24 @@ def _extract_section_fees(
     section_number: str,
     section_title: str,
     max_retries: int = 3,
+    prose_only: bool = False,
 ) -> PortTariffPayload:
     # TABLE_JSON injection already done as a parser step in run() before this call.
     clean_md = sanitize(section_md, source="pdf")
+    task_note = (
+        "\n\n**NOTE:** TABLE_JSON fee records in this section have already been "
+        "extracted deterministically. Do NOT emit TariffFeeItems for fees that appear "
+        "inside [TABLE_JSON] blocks. Your task here is limited to:\n"
+        "1. Fees that appear ONLY in prose text (not in any TABLE_JSON block).\n"
+        "2. Section-level surcharges, conditions, and exceptions that qualify the table fees "
+        "(emit these as separate TariffFeeItems with port='All' and base_fee=0.0, "
+        "populating surcharges[] or conditions[] as appropriate).\n"
+        "If there are no prose fees and no section-level clauses, return an empty fees list."
+    ) if prose_only else ""
     messages = [
         SystemMessage(content=_SYSTEM_PROMPT),
         HumanMessage(content=(
-            f"Extract all tariff fee items from the section below.\n\n"
+            f"Extract all tariff fee items from the section below.{task_note}\n\n"
             f"## Section Reference\nSection: {section_number or 'N/A'}  Heading: {section_title}\n\n"
             f"## Section Markdown\n\n{clean_md}"
         )),
@@ -365,7 +376,13 @@ def _parse_gt_bounds(label: str) -> Optional[tuple]:
     m = re.search(r"above(\d+)", s)
     if m:
         return (int(m.group(1)) + 1, 999_999_999)
-    m = re.search(r"(\d+)to(\d+)", s)
+    m = re.search(r"(\d+)plus", s)          # "100000 plus" / "100 001 plus"
+    if m:
+        return (int(m.group(1)) + 1, 999_999_999)
+    m = re.search(r"(\d+)to(\d+)", s)       # "2001 to 10000"
+    if m:
+        return (int(m.group(1)), int(m.group(2)))
+    m = re.search(r"^(\d+)-(\d+)$", s)      # "2000-10000" hyphen format (craft table labels)
     if m:
         return (int(m.group(1)), int(m.group(2)))
     return None
@@ -687,6 +704,140 @@ def _log_annotated_tree(nodes: List[dict], indent: int = 0) -> None:
             _log_annotated_tree(n["children"], indent + 1)
 
 
+# ─── Direct TABLE_JSON → TariffFeeItem mapping (no LLM) ─────────────────────
+
+_CRAFT_SENTINEL = "MAXIMUM NUMBER OF CRAFT"
+
+
+def _get_craft_multiplier(gt_range: str, craft_recs: List[dict]) -> float:
+    """Return the craft multiplier for a GT band from the craft allocation table.
+
+    Uses gt_min + 1 as the lookup point to avoid off-by-one mismatches at band
+    boundaries (e.g. rate band "10000-50000" has gt_min=10000 which sits exactly
+    on the boundary between craft bands "2000-10000" and "10001-50000").
+    """
+    if not craft_recs or not gt_range:
+        return 1.0
+    parts = gt_range.split("-", 1)
+    try:
+        gt_min = int(parts[0])
+    except ValueError:
+        return 1.0
+
+    lookup = gt_min + 1  # +1 pushes boundary values into the correct upper band
+
+    bands = []
+    for cr in craft_recs:
+        bounds = _parse_gt_bounds(cr.get("fee_label", ""))
+        if bounds:
+            bands.append((bounds[0], bounds[1], float(cr.get("base_fee", 1.0))))
+    bands.sort()
+
+    for cmin, cmax, mult in bands:
+        if cmin <= lookup <= cmax:
+            return mult
+    # lookup above all bands → use the highest band's multiplier
+    if bands and lookup > bands[-1][1]:
+        return bands[-1][2]
+    return 1.0
+
+
+def _direct_map_table_items(
+    section_md: str,
+    section_number: str,
+    section_title: str,
+) -> List["TariffFeeItem"]:
+    """
+    Parse every [TABLE_JSON] block in *section_md* and convert each record
+    directly to a TariffFeeItem — no LLM involved.
+
+    Craft allocation tables (port == _CRAFT_SENTINEL) are used to build a
+    multiplier lookup applied to the rate records; they do not produce fee items
+    themselves.
+
+    Returns an empty list when the section has no TABLE_JSON blocks.
+    """
+    from models.tariff_extraction import TariffFeeItem
+
+    blocks = re.findall(r"\[TABLE_JSON\](.*?)\[/TABLE_JSON\]", section_md, re.DOTALL)
+    if not blocks:
+        return []
+
+    # Separate craft-allocation table from rate tables
+    craft_recs: List[dict] = []
+    rate_blocks: List[List[dict]] = []
+    for raw in blocks:
+        try:
+            recs = json.loads(raw.strip())
+        except json.JSONDecodeError:
+            continue
+        if recs and recs[0].get("port") == _CRAFT_SENTINEL:
+            craft_recs = recs
+        else:
+            rate_blocks.append(recs)
+
+    items: List[TariffFeeItem] = []
+    for recs in rate_blocks:
+        for rec in recs:
+            port      = rec.get("port", "All") or "All"
+            # Normalize "Other Ports" variants to the canonical retriever label "Other"
+            if port.lower() in ("other ports", "other port"):
+                port = "Other"
+            base_fee  = float(rec.get("base_fee", 0.0))
+            incr      = float(rec.get("incremental_fee_per_100_tons", 0.0))
+            gt_range  = rec.get("gt_range", "")
+            fee_label = rec.get("fee_label", "")
+
+            # GT bounds
+            if gt_range:
+                parts  = gt_range.split("-", 1)
+                gt_min = int(parts[0]) if parts[0].lstrip("-").isdigit() else 0
+                gt_max = int(parts[1]) if len(parts) > 1 and parts[1].isdigit() else 999_999_999
+                vessel_gt_range = gt_range
+            else:
+                gt_min, gt_max = 0, 999_999_999
+                vessel_gt_range = "0-999999999"
+
+            # Craft multiplier (only meaningful for GT-banded tug sections)
+            mult = _get_craft_multiplier(gt_range, craft_recs) if gt_range else 1.0
+
+            # Formula
+            if mult == 0.5:
+                formula = "base_fee * 0.5"
+            elif incr > 0 and gt_range:
+                core = "base_fee + ceil((GT - lower_bound) / 100) * increment"
+                formula = f"({core}) * {int(mult)}" if mult > 1 else core
+            elif incr > 0:
+                formula = "base_fee + ceil(GT / 100) * increment"
+            else:
+                formula = "base_fee"
+
+            # Notes
+            notes: dict = {}
+            if mult != 1.0:
+                notes["num_craft"] = str(mult)
+
+            tariff_fee_item = (fee_label or section_title).upper()
+
+            items.append(TariffFeeItem(
+                section=section_number,
+                section_name=section_title,
+                tariff_fee_item=tariff_fee_item,
+                port=port,
+                vessel_type="All",
+                vessel_gt_range=vessel_gt_range,
+                gt_min=gt_min,
+                gt_max=gt_max,
+                base_fee=base_fee,
+                incremental_fee_per_100_gt=incr,
+                formula=formula,
+                notes=notes,
+                extraction_confidence=1.0,
+            ))
+
+    return items
+
+
 # ─── Public interface ─────────────────────────────────────────────────────────
 
 def prepare_markdown(md_path: Path) -> tuple:
@@ -812,19 +963,44 @@ def run(
 
             bar.set_postfix_str(f"{sec.number} {sec.title[:30]}")
             try:
-                payload  = _extract_section_fees(section_md, sec.number, sec.title)
-                c        = country or payload.country.strip()
-                currency = payload.currency.strip()
+                # ── Step 1: deterministic direct mapping of TABLE_JSON records ──
+                direct_items = _direct_map_table_items(section_md, sec.number, sec.title)
+                has_tables   = bool(direct_items)
 
-                for item in payload.fees:
+                c        = country
+                currency = "ZAR"
+
+                for item in direct_items:
                     if not item.section_name:
                         item.section_name = sec.title
                     store.upsert_fee_item(doc_id, c, currency, tariff_year, item)
                     fee_items_written += 1
 
+                if has_tables:
+                    tqdm.write(f"  [TBL]  {sec.number or '—'} {sec.title[:40]}: {len(direct_items)} table item(s) mapped directly")
+
+                # ── Step 2: LLM for prose fees + section-level surcharges ──────
+                payload  = _extract_section_fees(
+                    section_md, sec.number, sec.title, prose_only=has_tables
+                )
+                c        = country or payload.country.strip() or c
+                currency = payload.currency.strip() or currency
+
+                prose_count = 0
+                for item in payload.fees:
+                    if not item.section_name:
+                        item.section_name = sec.title
+                    store.upsert_fee_item(doc_id, c, currency, tariff_year, item)
+                    fee_items_written += 1
+                    prose_count += 1
+
                 store.log_section(doc_id, section_id, "done")
                 done_count += 1
-                msg = f"  [OK]   {sec.number or '—'} {sec.title[:40]}: {len(payload.fees)} item(s)"
+                total = len(direct_items) + prose_count
+                msg = (
+                    f"  [OK]   {sec.number or '—'} {sec.title[:40]}: "
+                    f"{total} item(s)  [{len(direct_items)} table + {prose_count} prose]"
+                )
                 log.info(msg)
                 tqdm.write(msg)
 

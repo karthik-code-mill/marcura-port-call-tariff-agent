@@ -157,7 +157,7 @@ CREATE TABLE IF NOT EXISTS tariff_fee_items (
     extraction_confidence       REAL    DEFAULT 1.0,
     source_page                 INTEGER DEFAULT 0,
     ingested_at                 TEXT    NOT NULL,
-    UNIQUE(doc_id, section, tariff_fee_item, vessel_type, vessel_gt_range)
+    UNIQUE(doc_id, port, section, tariff_fee_item, vessel_type, vessel_gt_range)
 );
 
 CREATE TABLE IF NOT EXISTS ingestion_log (
@@ -231,7 +231,7 @@ class TariffStore:
                  port_condition, conditions, surcharges, exceptions, notes,
                  unmodeled_clauses, extraction_confidence, source_page, ingested_at)
             VALUES (?,?,?,?,?, ?,?,?, ?,?,?,?, ?,?,?, ?,?,?,?,?, ?,?,?,?)
-            ON CONFLICT(doc_id, section, tariff_fee_item, vessel_type, vessel_gt_range)
+            ON CONFLICT(doc_id, port, section, tariff_fee_item, vessel_type, vessel_gt_range)
             DO UPDATE SET
                 section_name               = excluded.section_name,
                 vessel_type                = excluded.vessel_type,

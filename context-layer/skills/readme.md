@@ -1,0 +1,1 @@
+This is where skills for the Agentic AI project will be managed

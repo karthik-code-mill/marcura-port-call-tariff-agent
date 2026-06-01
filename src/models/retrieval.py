@@ -33,6 +33,7 @@ class ApplicableFeeRecord(BaseModel):
     base_fee: float
     incremental_fee_per_100_gt: float
     formula: str
+    port_condition: str
     conditions: List[str]
     surcharges: List[Dict[str, Any]]
     exceptions: List[Dict[str, Any]]

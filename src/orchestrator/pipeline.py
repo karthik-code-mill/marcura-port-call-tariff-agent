@@ -107,10 +107,10 @@ def run_pipeline(vessel: VesselInput, tariff_store, chunk_store=None, config: Op
 if __name__ == "__main__":
     import argparse
     import json
+    from datetime import datetime
     from dotenv import load_dotenv
 
     load_dotenv()
-    logging.basicConfig(level=logging.INFO, format="%(asctime)s  %(levelname)-8s  %(message)s", datefmt="%H:%M:%S")
 
     from agents.document_preparation_agent import TariffStore, db_path_for_version, load_active_version
     from agents.hierarchical_chunk_agent import CHUNK_DB_PATH, ChunkStore
@@ -125,9 +125,30 @@ if __name__ == "__main__":
     parser.add_argument("--public-holiday", action="store_true")
     parser.add_argument("--in-ballast",     action="store_true")
     parser.add_argument("--cargo-type",     default="")
+    parser.add_argument("--days-in-port", "--days_in_port",
+                        type=int, default=1, dest="days_in_port",
+                        help="Days the vessel stays in port (used in time-based fee formulas).")
     parser.add_argument("--condition",      action="append", default=[], dest="conditions")
     parser.add_argument("--version-tag",    default=None)
     args = parser.parse_args()
+
+    # ── File + console logging ────────────────────────────────────────────────
+    _LOG_DIR = Path(__file__).resolve().parent.parent.parent / "logs"
+    _LOG_DIR.mkdir(exist_ok=True)
+    _ts       = datetime.now().strftime("%Y%m%d_%H%M%S")
+    _slug     = f"{args.port}-GT{int(args.gt)}"
+    _log_file = _LOG_DIR / f"execution-{_slug}-{_ts}.log"
+    _fmt      = "%(asctime)s  %(levelname)-8s  %(message)s"
+    logging.basicConfig(
+        level=logging.INFO,
+        format=_fmt,
+        datefmt="%H:%M:%S",
+        handlers=[
+            logging.StreamHandler(),
+            logging.FileHandler(str(_log_file), encoding="utf-8"),
+        ],
+    )
+    logging.getLogger(__name__).info(f"[Pipeline] log file → {_log_file}")
 
     version_tag = args.version_tag or load_active_version(args.country)
     if not version_tag:
@@ -143,6 +164,7 @@ if __name__ == "__main__":
         after_hours=args.after_hours,
         public_holiday=args.public_holiday,
         in_ballast=args.in_ballast,
+        days_in_port=args.days_in_port,
         special_conditions=args.conditions,
     )
 

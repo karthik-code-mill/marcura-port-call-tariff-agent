@@ -122,7 +122,7 @@ The API will be available at:
 - **ReDoc:** http://localhost:8000/redoc
 - **Root:** http://localhost:8000/
 
-On startup the server loads the active tariff version from `context-layer/config/app_config.json`. If no active version is set (first run), it starts without a tariff store — that is fine, ingestion comes next.
+On startup the server loads the active tariff version from `config/app_config.json`. If no active version is set (first run), it starts without a tariff store — that is fine, ingestion comes next.
 
 ---
 
@@ -440,7 +440,7 @@ On-hold items require a manual decision:
 
 1. Review the `reason` and the source PDF page.
 2. If the extraction is wrong: re-run Stage 1 with an improved prompt, or correct the DB row directly.
-3. Remove the entry from `context-layer/config/validation_holds.json`.
+3. Remove the entry from `config/validation_holds.json`.
 4. Update `extraction_confidence` in the SQLite DB to a value ≥ 0.2:
    ```sql
    UPDATE tariff_fee_items

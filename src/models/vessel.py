@@ -12,4 +12,5 @@ class VesselInput(BaseModel):
     public_holiday: bool = Field(default=False, description="Service on a public holiday")
     in_ballast: bool = Field(default=False, description="Vessel arriving/departing in ballast (no cargo)")
     cargo_type: str = Field(default="", description="Cargo commodity, e.g. 'Iron Ore', 'Coal', 'Crude Oil'")
+    days_in_port: int = Field(default=1, ge=1, description="Number of days the vessel remains in port. Used in time-based fee formulas (e.g. berth hire).")
     special_conditions: List[str] = Field(default_factory=list, description="Additional conditions, e.g. ['tug_standby_cancelled']")

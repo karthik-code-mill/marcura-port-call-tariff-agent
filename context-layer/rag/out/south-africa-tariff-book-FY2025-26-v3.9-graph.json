@@ -1,0 +1,202 @@
+{
+  "md_file": "south-africa-tariff-book-FY2025-26-v3.9.md",
+  "doc_id": "0967183cb19d",
+  "total_top_level": 21,
+  "processing_units": 21,
+  "rules": {
+    "A": "direct fee content → LLM call",
+    "B": "recurse to children",
+    "C": "skip"
+  },
+  "tree": [
+    {
+      "number": "1.1",
+      "title": "LIGHT DUES ON VESSELS",
+      "level": 2,
+      "rule": "A",
+      "selected": true,
+      "direct_content_chars": 646,
+      "children": []
+    },
+    {
+      "number": "1.1.1",
+      "title": "LIGHT DUES",
+      "level": 2,
+      "rule": "A",
+      "selected": true,
+      "direct_content_chars": 2013,
+      "children": []
+    },
+    {
+      "number": "1.2",
+      "title": "SAMSA LEVY",
+      "level": 2,
+      "rule": "A",
+      "selected": true,
+      "direct_content_chars": 363,
+      "children": []
+    },
+    {
+      "number": "2.1",
+      "title": "VTS CHARGES ON VESSELS",
+      "level": 2,
+      "rule": "A",
+      "selected": true,
+      "direct_content_chars": 479,
+      "children": []
+    },
+    {
+      "number": "2.1.1",
+      "title": "VTS CHARGES",
+      "level": 2,
+      "rule": "A",
+      "selected": true,
+      "direct_content_chars": 874,
+      "children": []
+    },
+    {
+      "number": "3.1",
+      "title": "GENERAL TERMS AND CONDITIONS",
+      "level": 2,
+      "rule": "A",
+      "selected": true,
+      "direct_content_chars": 1350,
+      "children": []
+    },
+    {
+      "number": "3.2",
+      "title": "MARINE SERVICES INCENTIVE",
+      "level": 2,
+      "rule": "A",
+      "selected": true,
+      "direct_content_chars": 910,
+      "children": []
+    },
+    {
+      "number": "3.3",
+      "title": "PILOTAGE SERVICES",
+      "level": 2,
+      "rule": "A",
+      "selected": true,
+      "direct_content_chars": 2000,
+      "children": []
+    },
+    {
+      "number": "3.4",
+      "title": "SURVEY/EXAMINATION OF SMALL VESSELS AND LIFE SAVING APPLIANCES",
+      "level": 2,
+      "rule": "A",
+      "selected": true,
+      "direct_content_chars": 174,
+      "children": []
+    },
+    {
+      "number": "3.5",
+      "title": "PILOTAGE EXEMPTION CERTIFICATE",
+      "level": 2,
+      "rule": "A",
+      "selected": true,
+      "direct_content_chars": 1166,
+      "children": []
+    },
+    {
+      "number": "3.6",
+      "title": "TUGS/VESSEL ASSISTANCE AND/OR ATTENDANCE",
+      "level": 2,
+      "rule": "A",
+      "selected": true,
+      "direct_content_chars": 2921,
+      "children": []
+    },
+    {
+      "number": "3.7",
+      "title": "MISCELLANEOUS TUG/VESSEL SERVICES",
+      "level": 2,
+      "rule": "A",
+      "selected": true,
+      "direct_content_chars": 3273,
+      "children": []
+    },
+    {
+      "number": "3.8",
+      "title": "BERTHING SERVICES",
+      "level": 2,
+      "rule": "A",
+      "selected": true,
+      "direct_content_chars": 1761,
+      "children": []
+    },
+    {
+      "number": "3.9",
+      "title": "RUNNING OF VESSEL LINES",
+      "level": 2,
+      "rule": "A",
+      "selected": true,
+      "direct_content_chars": 1665,
+      "children": []
+    },
+    {
+      "number": "3.10",
+      "title": "HIRE OF MARINE EQUIPMENT/MARINE SERVICES",
+      "level": 2,
+      "rule": "A",
+      "selected": true,
+      "direct_content_chars": 1328,
+      "children": []
+    },
+    {
+      "number": "4.1",
+      "title": "PORT FEES ON VESSELS",
+      "level": 2,
+      "rule": "A",
+      "selected": true,
+      "direct_content_chars": 326,
+      "children": []
+    },
+    {
+      "number": "4.1.1",
+      "title": "PORT DUES",
+      "level": 2,
+      "rule": "A",
+      "selected": true,
+      "direct_content_chars": 2943,
+      "children": []
+    },
+    {
+      "number": "4.1.2",
+      "title": "BERTH DUES",
+      "level": 2,
+      "rule": "A",
+      "selected": true,
+      "direct_content_chars": 3543,
+      "children": []
+    },
+    {
+      "number": "4.2",
+      "title": "PORT DUES FOR SMALL VESSELS, HULKS AND PLEASURE VESSELS",
+      "level": 2,
+      "rule": "A",
+      "selected": true,
+      "direct_content_chars": 2618,
+      "children": []
+    },
+    {
+      "number": "4.3",
+      "title": "MISCELLANEOUS SERVICES",
+      "level": 2,
+      "rule": "A",
+      "selected": true,
+      "direct_content_chars": 518,
+      "children": []
+    },
+    {
+      "number": "4.3.1",
+      "title": "FIRE AND EMERGENCY SERVICES",
+      "level": 2,
+      "rule": "A",
+      "selected": true,
+      "direct_content_chars": 1427,
+      "children": []
+    }
+  ]
+}

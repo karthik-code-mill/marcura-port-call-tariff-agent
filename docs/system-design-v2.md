@@ -54,7 +54,7 @@ The system is split into two independent, LangGraph-orchestrated pipelines. They
 ║                          │                        │                        │             ║
 ║                          ▼                        ▼                        ▼             ║
 ║                    Markdown file           Tariff fee DB           validation_holds     ║
-║                    (rag/out/)              (rag/db/)                (config/)            ║
+║                    (rag/out/)              (rag/db/)                (config/ at root)    ║
 ╚══════════════════════════════════════════════════════════════════════════════╝
 
 ╔══════════════════════════════════════════════════════════════════════════════╗
@@ -80,18 +80,20 @@ The system is split into two independent, LangGraph-orchestrated pipelines. They
 All persistent artefacts live under `context-layer/`. This directory is the single source of truth for everything the pipeline reads and writes between runs.
 
 ```
+config/                                  ← System-wide config (outside context-layer — shared across all countries/versions)
+├── app_config.json                      ← Active version registry per country
+└── validation_holds.json               ← On-hold fee records written by Validation Agent
+
 context-layer/
-├── rag/
-│   ├── raw/                             ← Source PDFs (input)
-│   │   └── south-africa-tariff-FY2025-26.pdf
-│   ├── out/                             ← Parser output (Markdown)
-│   │   └── south-africa-tariff-book-FY2025-26-v3.2.md
-│   └── db/                              ← Structured fee store (SQLite, per version)
-│       ├── south-africa-tariff-store-FY2025-26-v3.2.db
-│       └── chunk-store.db               ← Hierarchical chunk index
-└── config/
-    ├── app_config.json                  ← Active version registry (per country)
-    └── validation_holds.json            ← On-hold fee records from Validation Agent
+└── rag/
+    ├── raw/                             ← Source PDFs (input)
+    │   └── south-africa/
+    │       └── Publisher-Tariff-Book-FY-2025-26.pdf
+    ├── out/                             ← Parser output (Markdown)
+    │   └── south-africa-tariff-book-FY2025-26-v3.3.md
+    └── db/                              ← Structured fee store (SQLite, per version)
+        ├── south-africa-tariff-store-FY2025-26-v3.3.db
+        └── chunk-store.db               ← Hierarchical chunk index
 ```
 
 Tariff stores are **versioned by country and version tag** (`FY2025-26-v3.2`). Switching active versions is an API operation — it only updates `app_config.json` and requires no data migration.

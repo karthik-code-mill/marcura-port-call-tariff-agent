@@ -1,7 +1,18 @@
+PORT dues - unmodeled clause
+RUNNING LINE - Table 2 row next to each , LLm reads as all one port , port condition also fails
+PILOTAGE Table - Table has lots of unclean data like BR etc. So LLM is unable to parse. - converting to tool was first ideal but better is a table parser to JSON of headers & rows & then feed that to LLM.
+
+
+
+
+
+
+
+
 Issue 1 : unmodeled_clauses incorrect ["Tugs/vessels involved in salvage: Special conditions apply when services rendered constitute salvage. The Authority reserves the right to claim reward for salvage if the service rendered to a vessel in distress constitutes salvage."]
 Issue 2 : Light Dues instead of taking row 3 its taking a row with un modlled clause & confidence low why ?
 Issue 3 : PORT DUES - DAILY INCREMENTAL FEE - as no data on no of days_in_port
-Issue 4 : 
+Issue 4 : unmodeled_clauses ["Pilotage dues for services other than normal entering or leaving the port such as towage, standing by, etc. are available on application."]	
 
 
 

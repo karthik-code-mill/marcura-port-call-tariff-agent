@@ -1,0 +1,22 @@
+{
+  "md_file": "south-africa-tariff-book-FY2025-26-v3.5.md",
+  "doc_id": "52b7d06580d0",
+  "total_top_level": 1,
+  "processing_units": 1,
+  "rules": {
+    "A": "direct fee content → LLM call",
+    "B": "recurse to children",
+    "C": "skip"
+  },
+  "tree": [
+    {
+      "number": "0.50",
+      "title": "Represents workboat",
+      "level": 2,
+      "rule": "A",
+      "selected": true,
+      "direct_content_chars": 22283,
+      "children": []
+    }
+  ]
+}

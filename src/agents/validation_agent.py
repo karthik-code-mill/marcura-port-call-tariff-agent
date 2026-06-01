@@ -11,7 +11,7 @@ unmodeled_clauses — the records most likely to contain inaccuracies.
 On-hold disposition:
   - Record stays in DB (not deleted)
   - extraction_confidence updated to 0.0 (flags it for RetrievalGuardrail)
-  - Entry written to context-layer/config/validation_holds.json
+  - Entry written to config/validation_holds.json
 
 Public interface:
     from agents.validation_agent import run
@@ -41,7 +41,10 @@ load_dotenv()
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent.parent))
 
-from agents.rule_extractor_agent import parse_markdown_tree, _has_fee_content
+from agents.rule_extractor_agent import (
+    parse_markdown_tree, _has_fee_content,
+    _MODEL_CASCADE, _exhausted_models, _is_daily_quota, _parse_retry_delay,
+)
 from models.document import ValidationSummary, ValidationVerdict
 from monitoring.telemetry import get_tracer
 
@@ -50,13 +53,10 @@ tracer = get_tracer("tariff.validation_agent")
 
 _BASE_DIR    = Path(__file__).resolve().parent.parent.parent
 _PROMPTS_DIR = _BASE_DIR / "prompts"
-_HOLDS_PATH  = _BASE_DIR / "context-layer" / "config" / "validation_holds.json"
+_HOLDS_PATH  = _BASE_DIR / "config" / "validation_holds.json"
 
-# Provider + model from LLM_MODEL env var — same pattern as retriever/calculator.
-_llm = init_chat_model(
-    model=os.getenv("LLM_MODEL", "google_genai:gemini-2.5-flash"),
-    temperature=0.0,
-)
+# Model cascade shared with rule_extractor_agent (_MODEL_CASCADE, _exhausted_models).
+# If extraction already exhausted a model, validation skips it automatically.
 _SYSTEM_PROMPT    = (_PROMPTS_DIR / "validation_agent_sp_v3.0.md").read_text(encoding="utf-8")
 _INTER_CALL_DELAY = 3
 
@@ -76,22 +76,49 @@ def _call_validation_llm(source_md: str, record: dict, max_retries: int = 3) -> 
             f"EXTRACTED RECORD:\n{json.dumps(record, indent=2)}"
         )),
     ]
-    structured_llm = _llm.with_structured_output(_RawVerdict)
 
-    for attempt in range(max_retries):
-        try:
-            result = structured_llm.invoke(messages)
-            # Normalise verdict to allowed values (conservative default on unexpected)
-            if result.verdict not in ("valid", "on_hold"):
-                result = _RawVerdict(verdict="valid", reason=result.reason)
-            return result
-        except Exception as exc:
-            if attempt == max_retries - 1:
-                log.warning(f"[ValidationAgent] LLM call failed after {max_retries} attempts: {exc}")
-                return _RawVerdict(verdict="valid", reason=f"validation skipped: {exc}")
-            wait = 2 ** attempt
-            log.warning(f"[ValidationAgent] LLM call failed (attempt {attempt+1}): {exc} — retry in {wait}s")
-            time.sleep(wait)
+    available = [m for m in _MODEL_CASCADE if m not in _exhausted_models]
+    if not available:
+        log.warning("[ValidationAgent] All models quota-exhausted — skipping validation (marking valid)")
+        return _RawVerdict(verdict="valid", reason="validation skipped: all models daily-quota-exhausted")
+
+    for model in available:
+        structured_llm = init_chat_model(model=model, temperature=0.0).with_structured_output(_RawVerdict)
+
+        for attempt in range(max_retries):
+            try:
+                result = structured_llm.invoke(messages)
+                if result.verdict not in ("valid", "on_hold"):
+                    result = _RawVerdict(verdict="valid", reason=result.reason)
+                return result
+
+            except Exception as exc:
+                if "RESOURCE_EXHAUSTED" in str(exc) and _is_daily_quota(exc):
+                    _exhausted_models.add(model)
+                    remaining = [m for m in _MODEL_CASCADE if m not in _exhausted_models]
+                    log.warning(
+                        f"[ValidationAgent] Daily quota exhausted for {model} — "
+                        f"cascading to: {remaining[0] if remaining else 'none'}"
+                    )
+                    break  # try next model
+
+                retry_delay = _parse_retry_delay(exc)
+                if attempt < max_retries - 1:
+                    wait = max(retry_delay, 2 ** attempt)
+                    log.warning(
+                        f"[ValidationAgent] LLM call failed "
+                        f"(attempt {attempt + 1}/{max_retries}, model={model}): {exc} "
+                        f"— retry in {wait}s"
+                    )
+                    time.sleep(wait)
+                else:
+                    log.warning(
+                        f"[ValidationAgent] All {max_retries} attempts failed on {model}: {exc}"
+                    )
+                    break  # try next model
+
+    log.warning("[ValidationAgent] All models/retries exhausted — marking as valid (conservative)")
+    return _RawVerdict(verdict="valid", reason="validation skipped: all retries exhausted")
 
 
 # ─── Source section lookup ────────────────────────────────────────────────────

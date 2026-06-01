@@ -176,18 +176,11 @@ context-layer/rag/raw/{country_slug}/*.pdf
 
 ![Architecture Diagram](docs/architecture.svg)
 
-## Demo
-
-### Stage 1 — Tariff Extraction
-
-<video src="docs/demo1.mp4" controls width="100%"></video>
-
-### Stage 2 — Tariff Calculation
-
-<video src="docs/demo2.mp4" controls width="100%"></video>
-
----
-
+## Demo video
+### Extraction
+![Extraction demo](docs/demo1.mp4)
+### Execution
+![Execution demo](docs/demo2.mp4)
 ## Setup
 
 ### Requirements

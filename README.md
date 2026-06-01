@@ -187,7 +187,7 @@ context-layer/rag/raw/{country_slug}/*.pdf
 
 - Python 3.11+
 - A Google Gemini API key, or credentials for another LangChain-supported provider
-- The TNPA tariff book PDF — upload via API or place manually in `context-layer/rag/raw/south-africa/`
+- tariff book PDF — upload via API or place manually in `context-layer/rag/raw/<country-name>/`
 
 ### Install
 

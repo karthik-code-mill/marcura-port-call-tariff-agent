@@ -174,6 +174,12 @@ context-layer/rag/raw/{country_slug}/*.pdf
 
 ## Architecture
 
+P.S.Note: The project architetcure is designed for the scope of assignment & free tier llm power. Obiviously for production grade, i would be adding in improvisations including 
+- VLM (for more accuracte table & layout parsing), Enterprise - Document AI ( Azure Document Intelligenc / Gemini Vision / Docling)
+- Hybrid searches for more effcient retrival, including heirarchial chunks to refer back as second layer of reasoning checks
+- Add in Fine tuned LLM, Use multimodal extraction
+- etc.
+
 ![Architecture Diagram](docs/architecture.svg)
 
 ## Demo video
